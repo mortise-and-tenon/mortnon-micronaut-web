@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Mortnon Web
 
-## Getting Started
+## 简介
 
-First, run the development server:
+Mortnon 后端对应的前端项目，使用 Next.js + Antd 。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+同时在整个开发过程中，学习 React、Next.js 和 Antd。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Roadmap
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 创建一个登录页面
+  - 设计一个用户名、密码输入框，并增加登录按钮
+  - 调整以上为表单
+  - 设置页面布局
+    - header：左上角展示 logo
+    - main：背景图
+    - main：右侧为登录表单
+    - footer：版权等信息
+  - 登录按钮点击，实际调用登录接口，完成登录
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- 登录与未登录的判断
+  - 未成功登录时，访问其他页面自动跳到登录页面
+  - 登录成功时，自动跳转到首页
 
-## Learn More
+- 创建一个页面Layout
+  - head：左上角 Logo，右上角个人中心
+  - aside：左侧，为菜单列表
+  - main： 右侧，页面内容
+  - footer：版权等
 
-To learn more about Next.js, take a look at the following resources:
+- 创建一个简要的首页，以确认 Layout 生效
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- 创建用户管理页面
+  - 设计一个用户管理列表页面
+    - 表头：下拉属性列表、值输入框、过滤按钮、删除按钮
+      - 下拉属性列表：定值可过滤属性值
+      - 值输入框，用于过滤
+      - 过滤按钮：实际调用查询接口，更新表体数据
+    - 表体
+      - 列表第一列：复选框
+      - 列表最后一列：编辑基本信息按钮，分配按钮
+    - 表尾
+      - 页码选择、分页值列表
+      - 页码选择，实际调用查询接口，更新表体数据
+      - 分页值选择后，实际调用查询接口，更新表体数据

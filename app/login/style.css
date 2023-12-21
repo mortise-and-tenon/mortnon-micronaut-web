@@ -1,0 +1,49 @@
+.headerStyle{
+    text-align: center;
+    color: #fff;
+    height: 64;
+    padding-inline: 48;
+    line-height: 64px;
+    background-color: #4096ff
+  }
+
+.footerStyle{
+    text-align: center;
+    color: #fff;
+    background-color: #4096ff
+  }
+  
+  /**
+   * 登录页全屏
+   */
+.layoutStyle{
+    min-height: 100vh
+  }
+  
+  /**
+   * 登录表单靠右，纵向居中
+   */
+.contentStyle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end
+  }
+  
+  /**
+   * 登录表单和 Divider 控制展示宽度，并整体靠右
+   */
+.formSytle{
+    width: 40%;
+    min-width: 100px;
+    max-width: 300px;
+    text-align: right;
+    margin-right: 10%
+  }
+  
+  /**
+   * 登录按钮靠左
+   */
+.loginBtnSytle {
+    text-align: left;
+  }

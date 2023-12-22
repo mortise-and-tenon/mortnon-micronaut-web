@@ -41,6 +41,10 @@
     margin-right: 10%
   }
   
+.alert-style {
+  text-align: left;
+}
+
   /**
    * 登录按钮靠左
    */

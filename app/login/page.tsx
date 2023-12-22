@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React,{useState} from "react";
 import {
   EyeInvisibleOutlined,
   EyeTwoTone,
@@ -20,68 +20,45 @@ import {
 
 const { Header, Footer, Sider, Content } = Layout;
 
-import './style.css'
+import { useRouter } from "@/node_modules/next/navigation";
 
-const headerStyle: React.CSSProperties = {
-  textAlign: "center",
-  color: "#fff",
-  height: 64,
-  paddingInline: 48,
-  lineHeight: "64px",
-  backgroundColor: "#4096ff",
-};
+import "./style.css";
 
-const footerStyle: React.CSSProperties = {
-  textAlign: "center",
-  color: "#fff",
-  backgroundColor: "#4096ff",
-};
-
-/**
- * 登录页全屏
- */
-const layoutStyle: React.CSSProperties = {
-  minHeight: "100vh",
-};
-
-/**
- * 登录表单靠右，纵向居中
- */
-const contentStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'flex-end',
-};
-
-/**
- * 登录表单和 Divider 控制展示宽度，并整体靠右
- */
-const formSytle : React.CSSProperties = {
-  width: '40%',
-  minWidth: '100px',
-  maxWidth: '300px',
-  textAlign: 'right',
-  marginRight: '10%',
-}
-
-/**
- * 登录按钮靠左
- */
-const loginBtnSytle : React.CSSProperties = {
-  width: '40%',
-  textAlign: 'right',
-  marginRight: '16px',
-}
 
 export default function Login() {
+  const router = useRouter();
+
+  const onFinish = async (values) => {
+    const { username, password } = values;
+    const reqData = { username, password };
+    try {
+      const response = await fetch("http://localhost:8080/login/password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reqData),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("success:", data);
+        router.push('/');
+      } else {
+        const data = await response.json();
+        console.log("fail:", data);
+      }
+    } catch (error) {
+      console.error("error:", error);
+    }
+  };
+
   return (
     <Layout className="layoutStyle">
       <Header className="headerStyle">Header</Header>
       <Content className="contentStyle">
         <div className="formSytle">
-         <Divider>登录</Divider>
-          <Form name="login" className="login-form">
+          <Divider>登录</Divider>
+          <Form name="login" className="login-form" onFinish={onFinish}>
             <Form.Item
               name="username"
               rules={[{ required: true, message: "请输入用户名" }]}
@@ -100,7 +77,7 @@ export default function Login() {
                 placeholder="密码"
               />
             </Form.Item>
-            <Form.Item  className="loginBtnSytle">
+            <Form.Item className="loginBtnSytle">
               <Button
                 type="primary"
                 htmlType="submit"
@@ -110,9 +87,9 @@ export default function Login() {
               </Button>
             </Form.Item>
           </Form>
-          </div>
+        </div>
       </Content>
-      <Footer style={footerStyle}>©2023 Mortnon.</Footer>
+      <Footer className="footerStyle">©2023 Mortnon.</Footer>
     </Layout>
   );
 }

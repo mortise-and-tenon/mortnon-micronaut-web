@@ -1,0 +1,13 @@
+/* 全屏 */
+  .layout-full-screen {
+      min-height: 100vh;
+  }
+
+  /* 带菜单等的复杂头部 */
+  .main-header{
+    text-align: center;
+    height: 64;
+    padding-inline: 48;
+    line-height: 64px;
+    background-color: white;
+  }

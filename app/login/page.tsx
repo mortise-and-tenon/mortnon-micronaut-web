@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   EyeInvisibleOutlined,
   EyeTwoTone,
@@ -76,8 +77,11 @@ export default function Login() {
   };
 
   return (
-    <Layout className="layoutStyle">
-      <Header className="headerStyle">Header</Header>
+    <Layout className="layout-almost-full-screen background-style">
+      <Header className="headerStyle">
+        <Image src="/clover.png" alt="Logo" width={50} height={50}/>
+        <h1 className="title-style">Monrton 管理系统</h1>
+      </Header>
       <Content className="contentStyle">
         <div className="formSytle">
           <Divider>登录</Divider>
@@ -125,7 +129,7 @@ export default function Login() {
           </Spin>
         </div>
       </Content>
-      <Footer className="footerStyle">©2023 Mortnon.</Footer>
+      <Footer className="footer-style">©2023 Mortnon.</Footer>
     </Layout>
   );
 }

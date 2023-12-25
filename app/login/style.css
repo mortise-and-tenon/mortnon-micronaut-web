@@ -1,53 +1,66 @@
-.headerStyle{
-    text-align: center;
-    color: #fff;
-    height: 64;
-    padding-inline: 48;
-    line-height: 64px;
-    background-color: #4096ff
-  }
+.headerStyle {
+  height: 64px;
+  padding: 0 24px;
+  line-height: 64px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0);
 
-.footerStyle{
-    text-align: center;
-    color: #fff;
-    background-color: #4096ff
-  }
-  
-  /**
-   * 登录页全屏
-   */
-.layoutStyle{
-    min-height: 100vh
-  }
-  
-  /**
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.title-style {
+  margin: 0 0 0 16px;
+}
+
+
+/**
    * 登录表单靠右，纵向居中
    */
 .contentStyle {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end
-  }
-  
-  /**
-   * 登录表单和 Divider 控制展示宽度，并整体靠右
-   */
-.formSytle{
-    width: 40%;
-    min-width: 100px;
-    max-width: 300px;
-    text-align: right;
-    margin-right: 10%
-  }
-  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end
+}
+
+
+ /* 登录表单和 Divider 控制展示宽度，并整体靠右 */
+.formSytle {
+  width: 40%;
+  min-width: 100px;
+  max-width: 300px;
+  text-align: right;
+  margin-right: 10%;
+}
+
 .alert-style {
   text-align: left;
 }
 
-  /**
+/**
    * 登录按钮靠左
    */
 .loginBtnSytle {
-    text-align: left;
-  }
+  text-align: left;
+}
+
+/* 版权 footer */
+.footer-style {
+  text-align: center;
+  color: rgba(0, 0, 0, .6);
+  background-color: rgba(0, 0, 0, 0);
+  height: 64px;
+}
+
+.layout-almost-full-screen {
+  min-height: 97vh;
+}
+
+.background-style {
+  background-image: url('/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}

@@ -43,12 +43,13 @@ export default function Login() {
     const { username, password } = values;
     const reqData = { username, password };
     try {
-      const response = await fetch("http://localhost:8080/login/password", {
+      const response = await fetch("/api/login/password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(reqData),
+        'credentials': 'include'
       });
       if (response.ok) {
         const data = await response.json();

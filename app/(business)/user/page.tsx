@@ -1,13 +1,16 @@
 "use client";
 import React from "react";
 
-import type { MenuProps } from "antd";
-import { Breadcrumb, Layout, Menu, theme } from "antd";
+import { Breadcrumb, Layout, Menu, theme,MenuProps,Avatar } from "antd";
 import {
   LaptopOutlined,
   NotificationOutlined,
-  UserOutlined,
+  UserOutlined,HomeOutlined, SettingOutlined
 } from "@ant-design/icons";
+
+import Image from "next/image";
+
+import Link from "next/link";
 
 const { Header, Content, Sider } = Layout;
 
@@ -38,22 +41,35 @@ const items2: MenuProps["items"] = [
   };
 });
 
+const menuItems:MenuProps = [
+  {
+    key: 'dashboard',
+    label: (<Link href="/">首页</Link>),
+    icon: <HomeOutlined/>
+  },
+  {
+    key: 'sys',
+    label: (<Link href="/user">系统管理</Link>),
+    icon: <SettingOutlined/>
+  }
+]
+
 export default function User() {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
   return (
-    <Layout>
-      <Header style={{ display: "flex", alignItems: "center" }}>
-        <div className="demo-logo" />
+    <Layout className="layout-full-screen">
+      <Header className="main-header">
+      <Image src="/clover.png" alt="Logo" width={48} height={48} />
         <Menu
-          theme="dark"
           mode="horizontal"
-          defaultSelectedKeys={["2"]}
-          items={items1}
+          defaultSelectedKeys={["sys"]}
+          items={menuItems}
           style={{ flex: 1, minWidth: 0 }}
         />
+        <Avatar icon={<UserOutlined />} />
       </Header>
       <Layout>
         <Sider width={200} style={{ background: "gray" }}>

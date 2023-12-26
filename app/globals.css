@@ -1,12 +1,15 @@
 /* 全屏 */
   .layout-full-screen {
-      min-height: 100vh;
+      min-height: 97vh;
   }
 
   /* 带菜单等的复杂头部 */
   .main-header{
+    display: flex;
+    align-items: center;
     text-align: center;
-    height: 64;
+    height: 64px;
+    padding: 0 12px;
     padding-inline: 48;
     line-height: 64px;
     background-color: white;

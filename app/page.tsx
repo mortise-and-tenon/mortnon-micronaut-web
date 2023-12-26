@@ -1,14 +1,23 @@
-'use client';
-import React from 'react';
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
+"use client";
+import React from "react";
+import Image from "next/image";
+import { Layout, Menu, theme,MenuProps,Avatar  } from "antd";
+import { HomeOutlined, SettingOutlined,UserOutlined  } from '@ant-design/icons';
+import Link from "next/link";
+const { Header, Content } = Layout;
 
-const { Header, Content, Footer } = Layout;
-
-class MenuItem {
-  constructor(public key: string,public label:string){}
-}
-
-const items = new Array(new MenuItem('dashbord','首页'),new MenuItem('sys','系统管理'))
+const menuItems:MenuProps = [
+  {
+    key: 'dashboard',
+    label: (<Link href="/">首页</Link>),
+    icon: <HomeOutlined/>
+  },
+  {
+    key: 'sys',
+    label: (<Link href="/user">系统管理</Link>),
+    icon: <SettingOutlined/>
+  }
+]
 
 export default function Home() {
   const {
@@ -17,19 +26,20 @@ export default function Home() {
 
   return (
     <Layout className="layout-full-screen">
-    <Header style={{ display: 'flex', alignItems: 'center' }} className="main-header">
-      <div className="demo-logo" />
-      <Menu
-        mode="horizontal"
-        defaultSelectedKeys={['1']}
-        items={items}
-        style={{ flex: 1, minWidth: 0 }}
-        theme="light"
-      />
-    </Header>
-    <Content style={{ padding: '0 48px' }}>
-      Dashbord
-    </Content>
-  </Layout>
+      <Header
+        className="main-header"
+      >
+        <Image src="/clover.png" alt="Logo" width={48} height={48} />
+        <Menu
+          mode="horizontal"
+          defaultSelectedKeys={["dashboard"]}
+          items={menuItems}
+          style={{ flex: 1, minWidth: 0 }}
+          theme="light"
+        />
+        <Avatar icon={<UserOutlined />} />
+      </Header>
+      <Content>Dashbord</Content>
+    </Layout>
   );
 }

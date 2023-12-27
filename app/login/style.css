@@ -1,0 +1,28 @@
+/* 全屏 */
+.layout-almost-full-screen {
+    min-height: 97vh;
+}
+
+/* 登录页背景 */
+.background-style {
+    background-image: url('/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.header-style {
+    height: 64px;
+    padding: 0 12px;
+    line-height: 64px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0);
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.title-style {
+    margin: 0 0 0 16px;
+}

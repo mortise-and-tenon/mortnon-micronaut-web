@@ -5,17 +5,18 @@
 
 /* 登录页背景 */
 .background-style {
-    background-image: url('/bg.jpg');
+    /* background-image: url('/bg.jpg');
     background-size: cover;
     background-position: center;
-    overflow: hidden;
+    overflow: hidden; */
+    background-color: rgb(252, 252, 252);
 }
 
 .header-style {
     height: 64px;
     padding: 0 12px;
     line-height: 64px;
-    color: white;
+    color: black;
     background-color: rgba(0, 0, 0, 0);
 
     display: flex;
@@ -26,3 +27,24 @@
 .title-style {
     margin: 0 0 0 16px;
 }
+
+.content-style {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end
+}
+
+.form-style {
+    width: 40%;
+    min-width: 100px;
+    max-width: 400px;
+    margin-right: 10%;
+}
+
+/* 版权 footer */
+.footer-style {
+    text-align: center;
+    color: rgba(0, 0, 0, .6);
+    background-color: rgba(0, 0, 0, 0);
+  }

@@ -1,0 +1,14 @@
+/* 全屏 */
+.layout-almost-full-screen {
+    min-height: 97vh;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+}
+
+.nav-menu {
+    flex:1;
+    max-width: 160px;
+}

@@ -1,8 +1,21 @@
-'use client';
-import Image from 'next/image'
-import styles from './page.module.css'
-import { Button, Toast } from '@douyinfe/semi-ui';
+"use client";
+
+import { Layout,Nav } from "@douyinfe/semi-ui";
+
+
+import "./style.css";
+import NavHeader from "./_modules/navHeader";
+
+const { Footer, Content } = Layout;
 
 export default function Home() {
-  return <Button onClick={() => Toast.warning({ content: 'welcome' })}>Hello Semi</Button>;
+  return (
+    <Layout className="layout">
+      <NavHeader selectedKey="home"/>
+      <Content>
+ content
+      </Content>
+      <Footer>footer</Footer>
+    </Layout>
+  );
 }

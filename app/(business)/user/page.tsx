@@ -1,58 +1,30 @@
 "use client";
 import React from "react";
 
-import { Breadcrumb, Layout, Menu, theme,MenuProps,Avatar } from "antd";
+import { Breadcrumb, Layout, Menu, theme, MenuProps, Avatar } from "antd";
 import {
   LaptopOutlined,
   NotificationOutlined,
-  UserOutlined,HomeOutlined, SettingOutlined
+  UserOutlined,
+  HomeOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 
 import Image from "next/image";
 
 import Link from "next/link";
 
-const { Header, Content, Sider } = Layout;
+import NavHeader from "@/app/components/navHeader";
 
-const items1: MenuProps["items"] = ["1", "2", "3"].map((key) => ({
-  key,
-  label: `nav ${key}`,
-}));
+const { Content, Sider } = Layout;
 
-const items2: MenuProps["items"] = [
-  UserOutlined,
-  LaptopOutlined,
-  NotificationOutlined,
-].map((icon, index) => {
-  const key = String(index + 1);
-
-  return {
-    key: `sub${key}`,
-    icon: React.createElement(icon),
-    label: `subnav ${key}`,
-
-    children: new Array(4).fill(null).map((_, j) => {
-      const subKey = index * 4 + j + 1;
-      return {
-        key: subKey,
-        label: `option${subKey}`,
-      };
-    }),
-  };
-});
-
-const menuItems:MenuProps = [
-  {
-    key: 'dashboard',
-    label: (<Link href="/">首页</Link>),
-    icon: <HomeOutlined/>
-  },
-  {
-    key: 'sys',
-    label: (<Link href="/user">系统管理</Link>),
-    icon: <SettingOutlined/>
-  }
-]
+const menuSider: MenuProps["items"] = [
+  { key: "user", label: "用户管理", icon: <UserOutlined /> },
+  { key: "role", label: "角色管理", icon: <UserOutlined /> },
+  { key: "org", label: "组织管理", icon: <UserOutlined /> },
+  { key: "menu", label: "菜单管理", icon: <UserOutlined /> },
+  { key: "log", label: "日志管理", icon: <UserOutlined /> },
+];
 
 export default function User() {
   const {
@@ -61,24 +33,13 @@ export default function User() {
 
   return (
     <Layout className="layout-full-screen">
-      <Header className="main-header">
-      <Image src="/clover.png" alt="Logo" width={48} height={48} />
-        <Menu
-          mode="horizontal"
-          defaultSelectedKeys={["sys"]}
-          items={menuItems}
-          style={{ flex: 1, minWidth: 0 }}
-        />
-        <Avatar icon={<UserOutlined />} />
-      </Header>
+      <NavHeader />
       <Layout>
         <Sider width={200} style={{ background: "gray" }}>
           <Menu
             mode="inline"
-            defaultSelectedKeys={["1"]}
-            defaultOpenKeys={["sub1"]}
             style={{ height: "100%", borderRight: 0 }}
-            items={items2}
+            items={menuSider}
           />
         </Sider>
         <Layout style={{ padding: "0 24px 24px" }}>

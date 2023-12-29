@@ -8,6 +8,10 @@
 }
 
 .nav-menu {
-    flex:1;
-    max-width: 160px;
+    /* min-width: 20px;
+    max-width: 160px; */
+}
+
+.main-content{
+
 }

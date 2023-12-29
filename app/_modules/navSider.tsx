@@ -8,6 +8,7 @@ import {
   IconFile,
 } from "@douyinfe/semi-icons";
 import { useRouter } from "next/navigation";
+import './style.css'
 
 export async function menu() {
   try {
@@ -23,7 +24,7 @@ export default function NavSider(props) {
     () => [
       { itemKey: "user", text: "用户管理", icon: <IconUser /> },
       { itemKey: "role", text: "角色管理", icon: <IconUserGroup /> },
-      { itemKey: "org", text: "组织管理", icon: <IconLayers /> },
+      { itemKey: "project", text: "组织管理", icon: <IconLayers /> },
       { itemKey: "menu", text: "菜单管理", icon: <IconMenu /> },
       { itemKey: "log", text: "日志管理", icon: <IconFile /> },
     ],
@@ -33,7 +34,7 @@ export default function NavSider(props) {
   const menuLinkMap = {
     user: "/user",
     role: "/role",
-    org: "/org",
+    project: "/project",
     menu: "/menu",
     log: "/log",
   };
@@ -42,7 +43,6 @@ export default function NavSider(props) {
 
   return (
     <Nav
-      className="nav-menu"
       items={items}
       defaultSelectedKeys={selectedKeys}
       footer={{

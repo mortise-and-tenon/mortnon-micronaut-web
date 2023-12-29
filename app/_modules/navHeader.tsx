@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Nav, Dropdown, Avatar } from "@douyinfe/semi-ui";
 import { IconHome, IconDesktop } from "@douyinfe/semi-icons";
 import { useRouter } from "next/navigation";
-
+import './style.css'
 
 export default function NavHeader(props) {
   const {selectedKey} = props;

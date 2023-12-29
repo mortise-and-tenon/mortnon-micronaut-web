@@ -16,6 +16,7 @@ export default function User() {
       <NavHeader selectedKey="system" />
       <Content className="content">
         <NavSider selectedKey="user"/>
+        user
       </Content>
     </Layout>
   );

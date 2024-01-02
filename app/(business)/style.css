@@ -1,17 +1,39 @@
 /* 全屏 */
 .layout-almost-full-screen {
-    min-height: 97vh;
+    min-height: 100vh;
 }
 
 .content {
     display: flex;
+    background-color: rgb(244, 244, 244);
 }
 
-.nav-menu {
-    /* min-width: 20px;
-    max-width: 160px; */
+.bread-style {
+    padding: 12px;
 }
 
-.main-content{
+/* 面包屑字体大小 */
+.semi-typography-small {
+    font-size: 14px;
+}
 
+.card-style {
+    height: 100%;
+    margin: 0 12px 12px;
+}
+
+.action-left-style {
+    display: inline-flex;
+    align-items: center;
+}
+
+.action-style {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.action-btn-style{
+    margin: 0 8px;
 }

@@ -1,49 +1,22 @@
 "use client";
-import { Layout, Table, Breadcrumb, Card, Button } from "@douyinfe/semi-ui";
+import { Layout, Table, Breadcrumb, Card, Button,Modal } from "@douyinfe/semi-ui";
 
-import {IconUserAdd,IconRefresh} from '@douyinfe/semi-icons'
+import { IconUserAdd, IconRefresh } from "@douyinfe/semi-icons";
 
 import NavHeader from "@/app/_modules/navHeader";
 import NavSider from "@/app/_modules/navSider";
 
 import "../style.css";
-import internal from "stream";
+
 import { useEffect, useState } from "react";
-import { constants } from "http2";
 
 const { Content } = Layout;
 
-//表格列定义
-const columns = [
-  {
-    title: "所属组织",
-    dataIndex: "projectName",
-  },
-  {
-    title: "角色",
-    dataIndex: "roleName",
-  },
-  {
-    title: "用户名",
-    dataIndex: "userName",
-  },
-  {
-    title: "用户昵称",
-    dataIndex: "nickName",
-  },
-  {
-    title: "性别",
-    dataIndex: "sex",
-  },
-  {
-    title: "邮箱",
-    dataIndex: "email",
-  },
-  {
-    title: "手机号",
-    dataIndex: "phone",
-  },
-];
+//过滤器定义
+export type ColumnFilter = {
+  text: string;
+  value: number | string;
+};
 
 //性别
 enum Sex {
@@ -73,6 +46,8 @@ export type QueryResult = {
   totalSize: number;
   //数据
   data: Array<UserInfo>;
+  //用户名列过滤器
+  userNameFilter: Array<ColumnFilter>;
 };
 
 //获取的用户信息定义
@@ -102,6 +77,7 @@ export async function getUser(queryInfo, setQueryResult, setLoading) {
       const body = await response.json();
       const data = body.data;
       const userList: Array<UserInfo> = new Array<UserInfo>();
+      const userNameFilters: Array<ColumnFilter> = new Array<ColumnFilter>();
       data.content.forEach((user) => {
         const userInfo: UserInfo = {
           key: user.id,
@@ -122,6 +98,12 @@ export async function getUser(queryInfo, setQueryResult, setLoading) {
             user.project_roles.length > 0 ? user.project_roles[0].roleName : "",
         };
         userList.push(userInfo);
+
+        const userNameFilter: ColumnFilter = {
+          text: user.userName,
+          value: user.userName,
+        };
+        userNameFilters.push(userNameFilter);
       });
       console.log(userList);
       //绑定查询到的数据
@@ -132,6 +114,7 @@ export async function getUser(queryInfo, setQueryResult, setLoading) {
         pageSize: data.pageSize,
         totalSize: data.totalSize,
         data: userList,
+        userNameFilter: userNameFilters,
       };
       setQueryResult(queryResult);
       setLoading(false);
@@ -166,6 +149,42 @@ const rowSelection = {
 
 export default function User() {
   const [queryResult, setQueryResult] = useState({} as QueryResult);
+  //表格列定义
+  const columns = [
+    {
+      title: "用户名",
+      dataIndex: "userName",
+      filters: queryResult.userNameFilter,
+      onFilter: (value, record) => record.userName.includes(value),
+      sorter: (a, b) => (a.userName.length - b.userName.length > 0 ? 1 : -1),
+    },
+    {
+      title: "用户昵称",
+      dataIndex: "nickName",
+      sorter: (a, b) => (a.nickName.length - b.nickName.length > 0 ? 1 : -1),
+    },
+    {
+      title: "性别",
+      dataIndex: "sex",
+    },
+    {
+      title: "邮箱",
+      dataIndex: "email",
+    },
+    {
+      title: "手机号",
+      dataIndex: "phone",
+    },
+    {
+      title: "所属组织",
+      dataIndex: "projectName",
+    },
+    {
+      title: "角色",
+      dataIndex: "roleName",
+    },
+  ];
+
   const [loading, setLoading] = useState(true);
   const defaultPageSize = 10;
   const [queryInfo, setQueryInfo] = useState({
@@ -177,14 +196,40 @@ export default function User() {
     getUser(queryInfo, setQueryResult, setLoading);
   }, [queryInfo]);
 
-  //变更页码和每页条数时
-  const handleChange = (currentPage: number, pageSize: number) => {
+  //按条件刷新表格
+  const refreshTable = (currentPage, pageSize) => {
     setLoading(true);
 
     setQueryInfo({
-      page: currentPage - 1,
+      page: currentPage,
       size: pageSize,
     });
+  };
+
+  //变更页码和每页条数时刷新表格
+  const handleChange = (currentPage: number, pageSize: number) => {
+    refreshTable(currentPage - 1, pageSize);
+  };
+
+  //初始刷新表格数据
+  const refreshAll = () => {
+    refreshTable(0, defaultPageSize);
+  };
+
+  const [visible, setVisible] = useState(false);
+  const showDialog = () => {
+      setVisible(true);
+  };
+  const handleOk = () => {
+      setVisible(false);
+      console.log('Ok button clicked');
+  };
+  const handleCancel = () => {
+      setVisible(false);
+      console.log('Cancel button clicked');
+  };
+  const handleAfterClose = () => {
+      console.log('After Close callback executed');
   };
 
   return (
@@ -199,9 +244,32 @@ export default function User() {
           </Breadcrumb>
           <Card className="card-style">
             <div className="action-style">
-              <Button theme="borderless" icon={<IconUserAdd />} aria-label="新建用户"/>
+              <Button
+                theme="borderless"
+                icon={<IconUserAdd />}
+                aria-label="新建用户"
+                onClick={showDialog}
+              />
+              <Modal
+                title="基本对话框"
+                visible={visible}
+                onOk={handleOk}
+                afterClose={handleAfterClose} //>=1.16.0
+                onCancel={handleCancel}
+                closeOnEsc={true}
+            >
+                This is the content of a basic modal.
+                <br />
+                More content...
+            </Modal>
               <div>
-                <Button theme="borderless" icon={<IconRefresh />} aria-label="刷新页面" className="action-btn-style"/>
+                <Button
+                  theme="borderless"
+                  icon={<IconRefresh />}
+                  aria-label="刷新页面"
+                  className="action-btn-style"
+                  onClick={refreshAll}
+                />
                 <Button type="secondary">列</Button>
               </div>
             </div>

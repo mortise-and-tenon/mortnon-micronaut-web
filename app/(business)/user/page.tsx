@@ -8,9 +8,10 @@ import {
   Modal,
   Form,
   Toast,
+  Tooltip,
 } from "@douyinfe/semi-ui";
 
-import { IconUserAdd, IconRefresh } from "@douyinfe/semi-icons";
+import { IconUserAdd, IconRefresh, IconDelete } from "@douyinfe/semi-icons";
 
 import NavHeader from "@/app/_modules/navHeader";
 import NavSider from "@/app/_modules/navSider";
@@ -366,15 +367,31 @@ export default function User() {
 
   //是否展示模态框
   const [visible, setVisible] = useState(false);
+  //模态框中的表单是否禁用
+  const [formDisabled, setFormDisabled] = useState(false);
+  //模态框的关闭按钮和ESC是否可用
+  const [modalAllowClose, setModalAllowClose] = useState(true);
+  //删除用户按钮默认禁用，有选中用户数据时才可用
+  const [deleteBtnDisabled, setDeleteBtnDisabled] = useState(true);
+
   const showDialog = () => {
     getProjectTree(setProjectTree);
     getRole(setRoleInfo, setRoleLoading);
     setVisible(true);
   };
 
+  //模态框按钮属性
+  const modalBtnProps = {
+    disabled: formDisabled,
+  };
+
   //添加用户
   const onSubmit = async (values) => {
-    console.log("create user:", values);
+    //提交时禁用表单和按钮
+    setFormDisabled(true);
+    //提交时禁止禁止关闭模态框
+    setModalAllowClose(false);
+
     const createUserProjectRoleArray: Array<CreateUserProjectRole> =
       new Array<CreateUserProjectRole>();
 
@@ -396,8 +413,6 @@ export default function User() {
       projectRoles: createUserProjectRoleArray,
     };
 
-    console.log("user:", createUserData);
-
     try {
       const response = await fetch("/api/users", {
         method: "POST",
@@ -413,13 +428,22 @@ export default function User() {
         Toast.success("添加用户成功");
         //操作成功后关闭模态框
         setVisible(false);
+        //操作成功后刷新表格
+        refreshAll();
+      } else if (response.status == 400) {
+        const body = await response.json();
+        const msg = body.message;
+        Toast.error(`${msg}，请修改后重试`);
       } else {
-        Toast.error("添加用户失败");
+        Toast.error("添加用户失败，请重试");
       }
     } catch (error) {
       console.log("create use fail:", error);
-      Toast.error("添加用户失败，请重试");
+      Toast.error("发生异常，请重试");
     } finally {
+      //提交流程结束，恢复表单状态和允许关闭
+      setFormDisabled(false);
+      setModalAllowClose(true);
     }
   };
 
@@ -435,11 +459,8 @@ export default function User() {
   };
   const handleCancel = () => {
     setVisible(false);
-    console.log("Cancel button clicked");
   };
-  const handleAfterClose = () => {
-    console.log("After Close callback executed");
-  };
+  const handleAfterClose = () => {};
 
   //校验重复密码要一致
   const validateRepeatPwd = (val, values) => {
@@ -469,106 +490,123 @@ export default function User() {
           </Breadcrumb>
           <Card className="card-style">
             <div className="action-style">
-              <Button
-                theme="borderless"
-                icon={<IconUserAdd />}
-                aria-label="添加用户"
-                onClick={showDialog}
-              />
-              <Modal
-                title="添加用户"
-                visible={visible}
-                centered
-                onOk={handleOk}
-                afterClose={handleAfterClose}
-                onCancel={handleCancel}
-                closeOnEsc={true}
-                maskClosable={false}
-              >
-                <Form
-                  wrapperCol={{ span: 18 }}
-                  labelCol={{ span: 6 }}
-                  labelPosition="left"
-                  labelAlign="right"
-                  onSubmit={onSubmit}
-                  getFormApi={bindFormApi}
-                >
-                  <Form.Input
-                    field="username"
-                    label="用户名"
-                    placeholder={"用户名"}
-                    trigger="blur"
-                    rules={[{ required: true, message: "请输入用户名" }]}
-                  />
-                  <Form.Input
-                    field="nickname"
-                    label="姓名"
-                    placeholder={"姓名"}
-                    trigger="blur"
-                    rules={[{ required: true, message: "请输入姓名" }]}
-                  />
-                  <Form.Select
-                    field="sex"
-                    label="性别"
-                    placeholder="请选择性别"
-                    style={{ width: "100%" }}
-                    optionList={sexInfo}
-                    rules={[{ required: true, message: "请选择性别" }]}
-                  />
-                  <Form.Input
-                    field="password"
-                    label="密码"
-                    mode="password"
-                    placeholder={"请输入密码"}
-                    trigger="blur"
-                    rules={[{ required: true, message: "请输入密码" }]}
-                  />
-                  <Form.Input
-                    field="repeatpassword"
-                    label={{ text: "确认密码", required: true }}
-                    mode="password"
-                    placeholder={"请再次输入密码"}
-                    trigger="blur"
-                    validate={validateRepeatPwd}
-                  />
-                  <Form.TreeSelect
-                    field="projectid"
-                    label="选择组织"
-                    placeholder="请选择组织"
-                    style={{ width: "100%" }}
-                    dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
-                    treeData={projectTree}
-                    rules={[{ required: true, message: "请选择组织" }]}
-                  />
-                  <Form.Select
-                    field="roleid"
-                    label="选择角色"
-                    placeholder="请选择角色"
-                    style={{ width: "100%" }}
-                    loading={roleLoading}
-                    optionList={roleInfo}
-                    rules={[{ required: true, message: "请选择角色" }]}
-                  />
-                  <Form.Input
-                    field="email"
-                    label="电子邮箱"
-                    placeholder={"请输入电子邮箱"}
-                  />
-                  <Form.Input
-                    field="phone"
-                    label="手机号"
-                    placeholder={"请输入手机号"}
-                  />
-                </Form>
-              </Modal>
               <div>
-                <Button
-                  theme="borderless"
-                  icon={<IconRefresh />}
-                  aria-label="刷新页面"
-                  className="action-btn-style"
-                  onClick={refreshAll}
-                />
+                <Tooltip content="添加用户">
+                  <Button
+                    theme="borderless"
+                    icon={<IconUserAdd />}
+                    aria-label="添加用户"
+                    onClick={showDialog}
+                  />
+                </Tooltip>
+                <Modal
+                  title="添加用户"
+                  visible={visible}
+                  centered
+                  onOk={handleOk}
+                  afterClose={handleAfterClose}
+                  onCancel={handleCancel}
+                  closeOnEsc={modalAllowClose}
+                  maskClosable={false}
+                  cancelButtonProps={modalBtnProps}
+                  okButtonProps={modalBtnProps}
+                >
+                  <Form
+                    wrapperCol={{ span: 18 }}
+                    labelCol={{ span: 6 }}
+                    labelPosition="left"
+                    labelAlign="right"
+                    onSubmit={onSubmit}
+                    getFormApi={bindFormApi}
+                    disabled={formDisabled}
+                  >
+                    <Form.Input
+                      field="username"
+                      label="用户名"
+                      placeholder={"用户名"}
+                      trigger="blur"
+                      rules={[{ required: true, message: "请输入用户名" }]}
+                    />
+                    <Form.Input
+                      field="nickname"
+                      label="姓名"
+                      placeholder={"姓名"}
+                      trigger="blur"
+                      rules={[{ required: true, message: "请输入姓名" }]}
+                    />
+                    <Form.Select
+                      field="sex"
+                      label="性别"
+                      placeholder="请选择性别"
+                      style={{ width: "100%" }}
+                      optionList={sexInfo}
+                      rules={[{ required: true, message: "请选择性别" }]}
+                    />
+                    <Form.Input
+                      field="password"
+                      label="密码"
+                      mode="password"
+                      placeholder={"请输入密码"}
+                      trigger="blur"
+                      rules={[{ required: true, message: "请输入密码" }]}
+                    />
+                    <Form.Input
+                      field="repeatpassword"
+                      label={{ text: "确认密码", required: true }}
+                      mode="password"
+                      placeholder={"请再次输入密码"}
+                      trigger="blur"
+                      validate={validateRepeatPwd}
+                    />
+                    <Form.TreeSelect
+                      field="projectid"
+                      label="选择组织"
+                      placeholder="请选择组织"
+                      style={{ width: "100%" }}
+                      dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
+                      treeData={projectTree}
+                      rules={[{ required: true, message: "请选择组织" }]}
+                    />
+                    <Form.Select
+                      field="roleid"
+                      label="选择角色"
+                      placeholder="请选择角色"
+                      style={{ width: "100%" }}
+                      loading={roleLoading}
+                      optionList={roleInfo}
+                      rules={[{ required: true, message: "请选择角色" }]}
+                    />
+                    <Form.Input
+                      field="email"
+                      label="电子邮箱"
+                      placeholder={"请输入电子邮箱"}
+                    />
+                    <Form.Input
+                      field="phone"
+                      label="手机号"
+                      placeholder={"请输入手机号"}
+                    />
+                  </Form>
+                </Modal>
+                <Tooltip content="删除用户">
+                  <Button
+                    theme="borderless"
+                    icon={<IconDelete />}
+                    aria-label="删除用户"
+                    disabled={deleteBtnDisabled}
+                  />
+                </Tooltip>
+              </div>
+              <div>
+                <Tooltip content="刷新表格">
+                  <Button
+                    theme="borderless"
+                    icon={<IconRefresh />}
+                    aria-label="刷新页面"
+                    className="action-btn-style"
+                    onClick={refreshAll}
+                  />
+                </Tooltip>
                 <Button type="secondary">列</Button>
               </div>
             </div>

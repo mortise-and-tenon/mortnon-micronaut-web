@@ -9,31 +9,25 @@ import {
   Form,
   Toast,
   Tooltip,
-  Input,
 } from "@douyinfe/semi-ui";
 
-import {
-  IconUserAdd,
-  IconRefresh,
-  IconDelete,
-  IconSpin,
-} from "@douyinfe/semi-icons";
+import { IconUserAdd, IconRefresh } from "@douyinfe/semi-icons";
 
 import NavHeader from "@/app/_modules/navHeader";
 import NavSider from "@/app/_modules/navSider";
-import ModalFooter from "@/app/_modules/modalFooter";
+
+import {
+  ColumnFilter,
+  UserInfo,
+  QueryInfo,
+  ProjectTreeNode,
+} from "@/app/lib/definitions";
 
 import "../style.css";
 
 import React, { useEffect, useState, useRef } from "react";
 
 const { Content } = Layout;
-
-//过滤器定义
-export type ColumnFilter = {
-  text: string;
-  value: number | string;
-};
 
 //性别
 enum Sex {
@@ -42,14 +36,6 @@ enum Sex {
   //男
   Male = 1,
 }
-
-//分页查询数据定义
-export type QueryInfo = {
-  //查询页码
-  page: number;
-  //查询每页数量
-  size: number;
-};
 
 //查询用户数据结果定义
 export type QueryResult = {
@@ -65,28 +51,6 @@ export type QueryResult = {
   data: Array<UserInfo>;
   //用户名列过滤器
   userNameFilter: Array<ColumnFilter>;
-};
-
-//用户信息定义
-export type UserInfo = {
-  //用户id对应表格key
-  key: number;
-  userName: string;
-  nickName: string;
-  sex: string;
-  email: string;
-  phone: string;
-  projectId: number;
-  projectName: string;
-  roleId: number;
-  roleName: string;
-};
-
-//组织树信息定义
-export type ProjectTreeNode = {
-  key: string;
-  label: string;
-  children: Array<ProjectTreeNode>;
 };
 
 //角色信息定义
@@ -122,8 +86,8 @@ export async function getUser(
 ) {
   try {
     const queryParams = new URLSearchParams({
-      page: queryInfo.page,
-      size: queryInfo.size,
+      page: queryInfo.page.toString(),
+      size: queryInfo.size.toString(),
     });
     const response = await fetch(`/api/users?${queryParams.toString()}`);
     if (response.ok) {
@@ -267,6 +231,7 @@ export default function User() {
 
   //删除行用户确定
   const handleDeleteOk = async () => {
+    setDialogDisabled(true);
     try {
       const response = await fetch(`/api/users/${rowUserInfo.key}`, {
         method: "DELETE",
@@ -287,6 +252,7 @@ export default function User() {
     } catch (error) {
       console.log("delete user error:", error);
     } finally {
+      setDialogDisabled(false);
     }
   };
 
@@ -297,7 +263,6 @@ export default function User() {
 
   //编辑行用户确定
   const handleEditOk = async () => {
-    console.log("edit confirm");
     if (formApiRef.current != null) {
       formApiRef.current.submitForm();
     } else {
@@ -313,8 +278,10 @@ export default function User() {
 
   //提交编辑用户信息
   const onEditSubmit = async (values) => {
+    setDialogDisabled(true);
     const editUserData = {
       id: rowUserInfo.key,
+      nickName: values.nickname,
       email: values.email,
       phone: values.phone,
       sex: values.sex,
@@ -331,12 +298,14 @@ export default function User() {
       });
 
       if (response.ok) {
+        Toast.success("修改用户成功");
         setEditDialogVisible(false);
       } else {
         Toast.error("修改用户失败");
       }
     } catch (error) {
     } finally {
+      setDialogDisabled(false);
     }
   };
 
@@ -407,6 +376,7 @@ export default function User() {
               maskClosable={false}
               onOk={handleDeleteOk}
               onCancel={handleDeleteCancel}
+              confirmLoading={dialogDisabled}
             >
               确定删除用户 {rowUserInfo.nickName} ？
             </Modal>
@@ -421,6 +391,7 @@ export default function User() {
               onCancel={handleEditCancel}
               maskClosable={false}
               maskStyle={{ backgroundColor: "rgba(244,244,244,0.2)" }}
+              confirmLoading={dialogDisabled}
             >
               <Form
                 wrapperCol={{ span: 18 }}
@@ -429,9 +400,10 @@ export default function User() {
                 labelAlign="right"
                 onSubmit={onEditSubmit}
                 getFormApi={bindFormApi}
-                disabled={formDisabled}
+                disabled={dialogDisabled}
               >
                 <Form.Input
+                  field="username"
                   label="用户名"
                   disabled={true}
                   initValue={rowUserInfo.userName}
@@ -537,7 +509,7 @@ export default function User() {
   //是否展示模态框
   const [visible, setVisible] = useState(false);
   //模态框中的表单是否禁用
-  const [formDisabled, setFormDisabled] = useState(false);
+  const [dialogDisabled, setDialogDisabled] = useState(false);
   //模态框的关闭按钮和ESC是否可用
   const [modalAllowClose, setModalAllowClose] = useState(true);
 
@@ -548,20 +520,10 @@ export default function User() {
     setVisible(true);
   };
 
-  //模态框取消按钮属性
-  const modalCancelBtnProps = {
-    disabled: formDisabled,
-  };
-
-  //模态框确认按钮属性
-  const modalConfirmBtnProps = {
-    disabled: formDisabled,
-  };
-
   //添加用户
   const onSubmit = async (values) => {
     //提交时禁用表单和按钮
-    setFormDisabled(true);
+    setDialogDisabled(true);
     //提交时禁止禁止关闭模态框
     setModalAllowClose(false);
 
@@ -615,7 +577,7 @@ export default function User() {
       Toast.error("发生异常，请重试");
     } finally {
       //提交流程结束，恢复表单状态和允许关闭
-      setFormDisabled(false);
+      setDialogDisabled(false);
       setModalAllowClose(true);
     }
   };
@@ -683,16 +645,8 @@ export default function User() {
                   onOk={addUserConfirm}
                   afterClose={handleAfterClose}
                   onCancel={addUserCancel}
-                  closeOnEsc={modalAllowClose}
                   maskClosable={false}
-                  footer={
-                    <ModalFooter
-                      confirmBtnProps={modalConfirmBtnProps}
-                      cancelBtnProps={modalCancelBtnProps}
-                      confirmOnClick={addUserConfirm}
-                      cancelOnClick={addUserCancel}
-                    />
-                  }
+                  confirmLoading={dialogDisabled}
                 >
                   <Form
                     wrapperCol={{ span: 18 }}
@@ -701,7 +655,7 @@ export default function User() {
                     labelAlign="right"
                     onSubmit={onSubmit}
                     getFormApi={bindFormApi}
-                    disabled={formDisabled}
+                    disabled={dialogDisabled}
                   >
                     <Form.Input
                       field="username"

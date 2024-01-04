@@ -736,7 +736,6 @@ export default function User() {
                     onClick={refreshAll}
                   />
                 </Tooltip>
-                <Button type="secondary">列</Button>
               </div>
             </div>
             <Table

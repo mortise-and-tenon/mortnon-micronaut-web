@@ -9,12 +9,19 @@ import {
   Form,
   Toast,
   Tooltip,
+  Input,
 } from "@douyinfe/semi-ui";
 
-import { IconUserAdd, IconRefresh, IconDelete } from "@douyinfe/semi-icons";
+import {
+  IconUserAdd,
+  IconRefresh,
+  IconDelete,
+  IconSpin,
+} from "@douyinfe/semi-icons";
 
 import NavHeader from "@/app/_modules/navHeader";
 import NavSider from "@/app/_modules/navSider";
+import ModalFooter from "@/app/_modules/modalFooter";
 
 import "../style.css";
 
@@ -152,6 +159,8 @@ export async function getUser(
         userNameFilters.push(userNameFilter);
       });
 
+      userList.sort((a, b) => a.userName.localeCompare(b.userName));
+
       //绑定查询到的数据
       //前台semi默认页数从1开始，后端从0开始
       const queryResult: QueryResult = {
@@ -244,30 +253,93 @@ export async function getRole(
   }
 }
 
-//表格选中事件定义
-const rowSelection = {
-  getCheckboxProps: (record) => ({
-    //系统管理员不可操作
-    disabled: record.key === 1,
-    name: record.name,
-  }),
-  onSelect: (record, selected) => {
-    //选中的行
-  },
-  onSelectAll: (selected, selectedRows) => {
-    //全选时的数据
-  },
-  onChange: (selectedRowKeys, selectedRows) => {
-    console.log(
-      `selectedRowKeys: ${selectedRowKeys}`,
-      "selectedRows: ",
-      selectedRows
-    );
-  },
-};
-
 export default function User() {
+  //表格查询数据
   const [queryResult, setQueryResult] = useState({} as QueryResult);
+
+  //删除行用户对话框是否可见
+  const [deleteDialogVisiable, setDeleteDialogVisiable] = useState(false);
+  //编辑行用户对话框是否可见
+  const [editDialogVisible, setEditDialogVisible] = useState(false);
+
+  //操作的行用户数据
+  const [rowUserInfo, setRowUserInfo] = useState({} as UserInfo);
+
+  //删除行用户确定
+  const handleDeleteOk = async () => {
+    try {
+      const response = await fetch(`/api/users/${rowUserInfo.key}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        Toast.success("删除用户成功");
+        setDeleteDialogVisiable(false);
+        //操作成功后刷新表格
+        refreshAll();
+      } else if (response.status == 403) {
+        Toast.error(`你无权删除用户！`);
+      } else {
+        const body = await response.json();
+        Toast.error(`${body.message}，删除用户失败，请重试`);
+      }
+    } catch (error) {
+      console.log("delete user error:", error);
+    } finally {
+    }
+  };
+
+  //删除行用户取消
+  const handleDeleteCancel = () => {
+    setDeleteDialogVisiable(false);
+  };
+
+  //编辑行用户确定
+  const handleEditOk = async () => {
+    console.log("edit confirm");
+    if (formApiRef.current != null) {
+      formApiRef.current.submitForm();
+    } else {
+      Toast.error("发生异常，请刷新重试");
+      console.log("formapi error,can't submit form.");
+    }
+  };
+
+  //编辑行用户取消
+  const handleEditCancel = () => {
+    setEditDialogVisible(false);
+  };
+
+  //提交编辑用户信息
+  const onEditSubmit = async (values) => {
+    const editUserData = {
+      id: rowUserInfo.key,
+      email: values.email,
+      phone: values.phone,
+      sex: values.sex,
+    };
+
+    try {
+      const response = await fetch("/api/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editUserData),
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setEditDialogVisible(false);
+      } else {
+        Toast.error("修改用户失败");
+      }
+    } catch (error) {
+    } finally {
+    }
+  };
+
   //表格列定义
   const columns = [
     {
@@ -275,12 +347,15 @@ export default function User() {
       dataIndex: "userName",
       filters: queryResult.userNameFilter,
       onFilter: (value, record) => record.userName.includes(value),
-      sorter: (a, b) => (a.userName.length - b.userName.length > 0 ? 1 : -1),
+      sorter: (a, b) => a.userName.localeCompare(b.userName),
     },
     {
       title: "用户昵称",
       dataIndex: "nickName",
-      sorter: (a, b) => (a.nickName.length - b.nickName.length > 0 ? 1 : -1),
+      sorter: (a, b) =>
+        a.nickName.localeCompare(b.userName, "zh-Hans-CN", {
+          sensitivity: "accent",
+        }),
     },
     {
       title: "性别",
@@ -301,6 +376,100 @@ export default function User() {
     {
       title: "角色",
       dataIndex: "roleName",
+    },
+    {
+      title: "操作",
+      render: (text, record: UserInfo, index) => {
+        const deleteProps = {};
+        const editProps = {};
+
+        if (record.key == 1) {
+          deleteProps.disabled = true;
+        }
+        deleteProps.onClick = async () => {
+          setDeleteDialogVisiable(true);
+          setRowUserInfo(record);
+        };
+        editProps.onClick = () => {
+          setEditDialogVisible(true);
+          setRowUserInfo(record);
+        };
+        return (
+          <div>
+            <Button theme="borderless" {...deleteProps}>
+              删除
+            </Button>
+            <Modal
+              title="删除用户"
+              visible={deleteDialogVisiable}
+              centered
+              maskStyle={{ backgroundColor: "rgba(244,244,244,0.2)" }}
+              maskClosable={false}
+              onOk={handleDeleteOk}
+              onCancel={handleDeleteCancel}
+            >
+              确定删除用户 {rowUserInfo.nickName} ？
+            </Modal>
+            <Button theme="borderless" {...editProps}>
+              编辑
+            </Button>
+            <Modal
+              title="编辑用户"
+              visible={editDialogVisible}
+              centered
+              onOk={handleEditOk}
+              onCancel={handleEditCancel}
+              maskClosable={false}
+              maskStyle={{ backgroundColor: "rgba(244,244,244,0.2)" }}
+            >
+              <Form
+                wrapperCol={{ span: 18 }}
+                labelCol={{ span: 6 }}
+                labelPosition="left"
+                labelAlign="right"
+                onSubmit={onEditSubmit}
+                getFormApi={bindFormApi}
+                disabled={formDisabled}
+              >
+                <Form.Input
+                  label="用户名"
+                  disabled={true}
+                  initValue={rowUserInfo.userName}
+                />
+                <Form.Input
+                  field="nickname"
+                  label="姓名"
+                  placeholder={"姓名"}
+                  trigger="blur"
+                  rules={[{ required: true, message: "请输入姓名" }]}
+                  initValue={rowUserInfo.nickName}
+                />
+                <Form.Select
+                  field="sex"
+                  label="性别"
+                  placeholder="请选择性别"
+                  style={{ width: "100%" }}
+                  optionList={sexInfo}
+                  rules={[{ required: true, message: "请选择性别" }]}
+                  initValue={rowUserInfo.sex}
+                />
+                <Form.Input
+                  field="email"
+                  label="电子邮箱"
+                  placeholder={"请输入电子邮箱"}
+                  initValue={rowUserInfo.email}
+                />
+                <Form.Input
+                  field="phone"
+                  label="手机号"
+                  placeholder={"请输入手机号"}
+                  initValue={rowUserInfo.phone}
+                />
+              </Form>
+            </Modal>
+          </div>
+        );
+      },
     },
   ];
 
@@ -371,17 +540,21 @@ export default function User() {
   const [formDisabled, setFormDisabled] = useState(false);
   //模态框的关闭按钮和ESC是否可用
   const [modalAllowClose, setModalAllowClose] = useState(true);
-  //删除用户按钮默认禁用，有选中用户数据时才可用
-  const [deleteBtnDisabled, setDeleteBtnDisabled] = useState(true);
 
+  //展示添加用户模态框
   const showDialog = () => {
     getProjectTree(setProjectTree);
     getRole(setRoleInfo, setRoleLoading);
     setVisible(true);
   };
 
-  //模态框按钮属性
-  const modalBtnProps = {
+  //模态框取消按钮属性
+  const modalCancelBtnProps = {
+    disabled: formDisabled,
+  };
+
+  //模态框确认按钮属性
+  const modalConfirmBtnProps = {
     disabled: formDisabled,
   };
 
@@ -448,16 +621,17 @@ export default function User() {
   };
 
   //点击添加用户窗口确认按钮
-  const handleOk = () => {
+  const addUserConfirm = async () => {
+    console.log("confirm");
     if (formApiRef.current != null) {
       formApiRef.current.submitForm();
-      console.log("Ok button clicked");
     } else {
       Toast.error("发生异常，请刷新重试");
       console.log("formapi error,can't submit form.");
     }
   };
-  const handleCancel = () => {
+
+  const addUserCancel = () => {
     setVisible(false);
   };
   const handleAfterClose = () => {};
@@ -477,6 +651,9 @@ export default function User() {
       console.log("formapi error,can't validate pwd.");
     }
   };
+
+  //存储选中的表格行的Key
+  const [selectedRowKeys, setSeletcedRowKeys] = useState([]);
 
   return (
     <Layout className="layout-almost-full-screen">
@@ -503,13 +680,19 @@ export default function User() {
                   title="添加用户"
                   visible={visible}
                   centered
-                  onOk={handleOk}
+                  onOk={addUserConfirm}
                   afterClose={handleAfterClose}
-                  onCancel={handleCancel}
+                  onCancel={addUserCancel}
                   closeOnEsc={modalAllowClose}
                   maskClosable={false}
-                  cancelButtonProps={modalBtnProps}
-                  okButtonProps={modalBtnProps}
+                  footer={
+                    <ModalFooter
+                      confirmBtnProps={modalConfirmBtnProps}
+                      cancelBtnProps={modalCancelBtnProps}
+                      confirmOnClick={addUserConfirm}
+                      cancelOnClick={addUserCancel}
+                    />
+                  }
                 >
                   <Form
                     wrapperCol={{ span: 18 }}
@@ -588,14 +771,6 @@ export default function User() {
                     />
                   </Form>
                 </Modal>
-                <Tooltip content="删除用户">
-                  <Button
-                    theme="borderless"
-                    icon={<IconDelete />}
-                    aria-label="删除用户"
-                    disabled={deleteBtnDisabled}
-                  />
-                </Tooltip>
               </div>
               <div>
                 <Tooltip content="刷新表格">
@@ -621,7 +796,6 @@ export default function User() {
                 onChange: handleChange,
               }}
               loading={loading}
-              rowSelection={rowSelection}
             />
           </Card>
         </Layout>

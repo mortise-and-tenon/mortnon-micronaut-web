@@ -20,6 +20,7 @@ import {
   ColumnFilter,
   UserInfo,
   QueryInfo,
+  BaesQueryResult,
   ProjectTreeNode,
 } from "@/app/lib/definitions";
 
@@ -38,15 +39,7 @@ enum Sex {
 }
 
 //查询用户数据结果定义
-export type QueryResult = {
-  //当前页数
-  pageNumber: number;
-  //总页数
-  totalPages: number;
-  //每页条数
-  pageSize: number;
-  //总条数
-  totalSize: number;
+export type QueryResult = BaesQueryResult & {
   //数据
   data: Array<UserInfo>;
   //用户名列过滤器
@@ -98,27 +91,27 @@ export async function getUser(
       data.content.forEach((user) => {
         const userInfo: UserInfo = {
           key: user.id,
-          userName: user.userName,
-          nickName: user.nickName,
+          userName: user.user_name,
+          nickName: user.nick_name,
           sex: user.sex === Sex.Female ? "女" : "男",
           email: user.email,
           phone: user.phone,
           projectId:
-            user.project_roles.length > 0 ? user.project_roles[0].projectId : 0,
+            user.project_roles.length > 0 ? user.project_roles[0].project_id : 0,
           projectName:
             user.project_roles.length > 0
-              ? user.project_roles[0].projectName
+              ? user.project_roles[0].project_name
               : "",
           roleId:
-            user.project_roles.length > 0 ? user.project_roles[0].roleId : 0,
+            user.project_roles.length > 0 ? user.project_roles[0].role_id : 0,
           roleName:
-            user.project_roles.length > 0 ? user.project_roles[0].roleName : "",
+            user.project_roles.length > 0 ? user.project_roles[0].role_name : "",
         };
         userList.push(userInfo);
 
         const userNameFilter: ColumnFilter = {
-          text: user.userName,
-          value: user.userName,
+          text: user.user_name,
+          value: user.user_name,
         };
         userNameFilters.push(userNameFilter);
       });
@@ -128,10 +121,10 @@ export async function getUser(
       //绑定查询到的数据
       //前台semi默认页数从1开始，后端从0开始
       const queryResult: QueryResult = {
-        pageNumber: data.pageNumber + 1,
-        totalPages: data.totalPages,
-        pageSize: data.pageSize,
-        totalSize: data.totalSize,
+        pageNumber: data.page_number + 1,
+        totalPages: data.total_pages,
+        pageSize: data.page_size,
+        totalSize: data.total_size,
         data: userList,
         userNameFilter: userNameFilters,
       };
@@ -613,9 +606,6 @@ export default function User() {
       console.log("formapi error,can't validate pwd.");
     }
   };
-
-  //存储选中的表格行的Key
-  const [selectedRowKeys, setSeletcedRowKeys] = useState([]);
 
   return (
     <Layout className="layout-almost-full-screen">

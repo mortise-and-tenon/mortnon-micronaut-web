@@ -13,9 +13,6 @@ import {
 
 import { IconUserAdd, IconRefresh } from "@douyinfe/semi-icons";
 
-import NavHeader from "@/app/_modules/navHeader";
-import NavSider from "@/app/_modules/navSider";
-
 import {
   ColumnFilter,
   UserInfo,
@@ -27,7 +24,6 @@ import {
 import "../style.css";
 
 import React, { useEffect, useState, useRef } from "react";
-
 const { Content } = Layout;
 
 //性别
@@ -97,7 +93,9 @@ export async function getUser(
           email: user.email,
           phone: user.phone,
           projectId:
-            user.project_roles.length > 0 ? user.project_roles[0].project_id : 0,
+            user.project_roles.length > 0
+              ? user.project_roles[0].project_id
+              : 0,
           projectName:
             user.project_roles.length > 0
               ? user.project_roles[0].project_name
@@ -105,7 +103,9 @@ export async function getUser(
           roleId:
             user.project_roles.length > 0 ? user.project_roles[0].role_id : 0,
           roleName:
-            user.project_roles.length > 0 ? user.project_roles[0].role_name : "",
+            user.project_roles.length > 0
+              ? user.project_roles[0].role_name
+              : "",
         };
         userList.push(userInfo);
 
@@ -608,141 +608,135 @@ export default function User() {
   };
 
   return (
-    <Layout className="layout-almost-full-screen">
-      <NavHeader selectedKey="system" />
-      <Content className="content">
-        <NavSider selectedKey="user" />
-        <Layout>
-          <Breadcrumb className="bread-style">
-            <Breadcrumb.Item noLink={true}>系统管理</Breadcrumb.Item>
-            <Breadcrumb.Item noLink={true}>用户管理</Breadcrumb.Item>
-          </Breadcrumb>
-          <Card className="card-style">
-            <div className="action-style">
-              <div>
-                <Tooltip content="添加用户">
-                  <Button
-                    theme="borderless"
-                    icon={<IconUserAdd />}
-                    aria-label="添加用户"
-                    onClick={showDialog}
-                  />
-                </Tooltip>
-                <Modal
-                  title="添加用户"
-                  visible={visible}
-                  centered
-                  onOk={addUserConfirm}
-                  afterClose={handleAfterClose}
-                  onCancel={addUserCancel}
-                  maskClosable={false}
-                  confirmLoading={dialogDisabled}
-                >
-                  <Form
-                    wrapperCol={{ span: 18 }}
-                    labelCol={{ span: 6 }}
-                    labelPosition="left"
-                    labelAlign="right"
-                    onSubmit={onSubmit}
-                    getFormApi={bindFormApi}
-                    disabled={dialogDisabled}
-                  >
-                    <Form.Input
-                      field="username"
-                      label="用户名"
-                      placeholder={"用户名"}
-                      trigger="blur"
-                      rules={[{ required: true, message: "请输入用户名" }]}
-                    />
-                    <Form.Input
-                      field="nickname"
-                      label="姓名"
-                      placeholder={"姓名"}
-                      trigger="blur"
-                      rules={[{ required: true, message: "请输入姓名" }]}
-                    />
-                    <Form.Select
-                      field="sex"
-                      label="性别"
-                      placeholder="请选择性别"
-                      style={{ width: "100%" }}
-                      optionList={sexInfo}
-                      rules={[{ required: true, message: "请选择性别" }]}
-                    />
-                    <Form.Input
-                      field="password"
-                      label="密码"
-                      mode="password"
-                      placeholder={"请输入密码"}
-                      trigger="blur"
-                      rules={[{ required: true, message: "请输入密码" }]}
-                    />
-                    <Form.Input
-                      field="repeatpassword"
-                      label={{ text: "确认密码", required: true }}
-                      mode="password"
-                      placeholder={"请再次输入密码"}
-                      trigger="blur"
-                      validate={validateRepeatPwd}
-                    />
-                    <Form.TreeSelect
-                      field="projectid"
-                      label="选择组织"
-                      placeholder="请选择组织"
-                      style={{ width: "100%" }}
-                      dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
-                      treeData={projectTree}
-                      rules={[{ required: true, message: "请选择组织" }]}
-                    />
-                    <Form.Select
-                      field="roleid"
-                      label="选择角色"
-                      placeholder="请选择角色"
-                      style={{ width: "100%" }}
-                      loading={roleLoading}
-                      optionList={roleInfo}
-                      rules={[{ required: true, message: "请选择角色" }]}
-                    />
-                    <Form.Input
-                      field="email"
-                      label="电子邮箱"
-                      placeholder={"请输入电子邮箱"}
-                    />
-                    <Form.Input
-                      field="phone"
-                      label="手机号"
-                      placeholder={"请输入手机号"}
-                    />
-                  </Form>
-                </Modal>
-              </div>
-              <div>
-                <Tooltip content="刷新表格">
-                  <Button
-                    theme="borderless"
-                    icon={<IconRefresh />}
-                    aria-label="刷新页面"
-                    className="action-btn-style"
-                    onClick={refreshAll}
-                  />
-                </Tooltip>
-              </div>
-            </div>
-            <Table
-              columns={columns}
-              dataSource={queryResult.data}
-              pagination={{
-                currentPage: queryResult.pageNumber,
-                pageSize: queryResult.pageSize,
-                total: queryResult.totalSize,
-                showSizeChanger: true,
-                onChange: handleChange,
-              }}
-              loading={loading}
-            />
-          </Card>
-        </Layout>
-      </Content>
+    <Layout>
+      <Breadcrumb className="bread-style">
+        <Breadcrumb.Item noLink={true}>系统管理</Breadcrumb.Item>
+        <Breadcrumb.Item noLink={true}>用户管理</Breadcrumb.Item>
+      </Breadcrumb>
+      <Card className="card-style">
+        <div className="action-style">
+          <div>
+            <Tooltip content="添加用户">
+              <Button
+                theme="borderless"
+                icon={<IconUserAdd />}
+                aria-label="添加用户"
+                onClick={showDialog}
+              />
+            </Tooltip>
+            <Modal
+              title="添加用户"
+              visible={visible}
+              centered
+              onOk={addUserConfirm}
+              afterClose={handleAfterClose}
+              onCancel={addUserCancel}
+              maskClosable={false}
+              confirmLoading={dialogDisabled}
+            >
+              <Form
+                wrapperCol={{ span: 18 }}
+                labelCol={{ span: 6 }}
+                labelPosition="left"
+                labelAlign="right"
+                onSubmit={onSubmit}
+                getFormApi={bindFormApi}
+                disabled={dialogDisabled}
+              >
+                <Form.Input
+                  field="username"
+                  label="用户名"
+                  placeholder={"用户名"}
+                  trigger="blur"
+                  rules={[{ required: true, message: "请输入用户名" }]}
+                />
+                <Form.Input
+                  field="nickname"
+                  label="姓名"
+                  placeholder={"姓名"}
+                  trigger="blur"
+                  rules={[{ required: true, message: "请输入姓名" }]}
+                />
+                <Form.Select
+                  field="sex"
+                  label="性别"
+                  placeholder="请选择性别"
+                  style={{ width: "100%" }}
+                  optionList={sexInfo}
+                  rules={[{ required: true, message: "请选择性别" }]}
+                />
+                <Form.Input
+                  field="password"
+                  label="密码"
+                  mode="password"
+                  placeholder={"请输入密码"}
+                  trigger="blur"
+                  rules={[{ required: true, message: "请输入密码" }]}
+                />
+                <Form.Input
+                  field="repeatpassword"
+                  label={{ text: "确认密码", required: true }}
+                  mode="password"
+                  placeholder={"请再次输入密码"}
+                  trigger="blur"
+                  validate={validateRepeatPwd}
+                />
+                <Form.TreeSelect
+                  field="projectid"
+                  label="选择组织"
+                  placeholder="请选择组织"
+                  style={{ width: "100%" }}
+                  dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
+                  treeData={projectTree}
+                  rules={[{ required: true, message: "请选择组织" }]}
+                />
+                <Form.Select
+                  field="roleid"
+                  label="选择角色"
+                  placeholder="请选择角色"
+                  style={{ width: "100%" }}
+                  loading={roleLoading}
+                  optionList={roleInfo}
+                  rules={[{ required: true, message: "请选择角色" }]}
+                />
+                <Form.Input
+                  field="email"
+                  label="电子邮箱"
+                  placeholder={"请输入电子邮箱"}
+                />
+                <Form.Input
+                  field="phone"
+                  label="手机号"
+                  placeholder={"请输入手机号"}
+                />
+              </Form>
+            </Modal>
+          </div>
+          <div>
+            <Tooltip content="刷新表格">
+              <Button
+                theme="borderless"
+                icon={<IconRefresh />}
+                aria-label="刷新页面"
+                className="action-btn-style"
+                onClick={refreshAll}
+              />
+            </Tooltip>
+          </div>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={queryResult.data}
+          pagination={{
+            currentPage: queryResult.pageNumber,
+            pageSize: queryResult.pageSize,
+            total: queryResult.totalSize,
+            showSizeChanger: true,
+            onChange: handleChange,
+          }}
+          loading={loading}
+        />
+      </Card>
     </Layout>
   );
 }

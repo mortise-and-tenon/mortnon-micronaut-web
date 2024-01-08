@@ -10,9 +10,6 @@ import {
 } from "@douyinfe/semi-ui";
 import { IconRefresh } from "@douyinfe/semi-icons";
 
-import NavHeader from "@/app/_modules/navHeader";
-import NavSider from "@/app/_modules/navSider";
-
 import {
   QueryInfo,
   BaesQueryResult,
@@ -21,8 +18,6 @@ import {
 } from "@/app/lib/definitions";
 
 import "../style.css";
-
-const { Content } = Layout;
 
 //查询日志数据结果定义
 export type QueryResult = BaesQueryResult & {
@@ -71,7 +66,7 @@ export async function getLog(
         userNameFilters.push(userNameFilter);
       });
 
-      logList.sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1));
+      logList.sort((a, b) => (new Date(a) > new Date(b) ? -1 : 1));
 
       //绑定查询到的数据
       //前台semi默认页数从1开始，后端从0开始
@@ -137,10 +132,6 @@ export default function Log() {
       dataIndex: "userName",
     },
     {
-      title: "所属组织",
-      dataIndex: "projectName",
-    },
-    {
       title: "IP",
       dataIndex: "ip",
     },
@@ -149,57 +140,51 @@ export default function Log() {
       dataIndex: "action",
     },
     {
-      title: "结果",
-      dataIndex: "result",
+      title: "操作时间",
+      dataIndex: "time",
+      sorter: (a, b) => (new Date(a) > new Date(b) ? -1 : 1),
     },
     {
       title: "级别",
       dataIndex: "level",
     },
     {
-      title: "操作时间",
-      dataIndex: "time",
-      sorter: (a, b) => (new Date(a) > new Date(b) ? 1 : -1),
+      title: "结果",
+      dataIndex: "result",
     },
   ];
 
   return (
-    <Layout className="layout-almost-full-screen">
-      <NavHeader selectedKey="system" />
-      <Content className="content">
-        <NavSider selectedKey="log" />
-        <Layout>
-          <Breadcrumb className="bread-style">
-            <Breadcrumb.Item noLink={true}>系统管理</Breadcrumb.Item>
-            <Breadcrumb.Item noLink={true}>用户管理</Breadcrumb.Item>
-          </Breadcrumb>
-          <Card className="card-style">
-            <div className="action-style">
-              <Tooltip content="刷新表格">
-                <Button
-                  theme="borderless"
-                  icon={<IconRefresh />}
-                  aria-label="刷新页面"
-                  className="action-btn-style"
-                  onClick={refreshAll}
-                />
-              </Tooltip>
-            </div>
-            <Table
-              columns={columns}
-              dataSource={queryResult.data}
-              pagination={{
-                currentPage: queryResult.pageNumber,
-                pageSize: queryResult.pageSize,
-                total: queryResult.totalSize,
-                showSizeChanger: true,
-                onChange: handleChange,
-              }}
-              loading={loading}
+    <Layout>
+      <Breadcrumb className="bread-style">
+        <Breadcrumb.Item noLink={true}>系统管理</Breadcrumb.Item>
+        <Breadcrumb.Item noLink={true}>日志管理</Breadcrumb.Item>
+      </Breadcrumb>
+      <Card className="card-style">
+        <div className="action-style">
+          <Tooltip content="刷新表格">
+            <Button
+              theme="borderless"
+              icon={<IconRefresh />}
+              aria-label="刷新页面"
+              className="action-btn-style"
+              onClick={refreshAll}
             />
-          </Card>
-        </Layout>
-      </Content>
+          </Tooltip>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={queryResult.data}
+          pagination={{
+            currentPage: queryResult.pageNumber,
+            pageSize: queryResult.pageSize,
+            total: queryResult.totalSize,
+            showSizeChanger: true,
+            onChange: handleChange,
+          }}
+          loading={loading}
+        />
+      </Card>
     </Layout>
   );
 }

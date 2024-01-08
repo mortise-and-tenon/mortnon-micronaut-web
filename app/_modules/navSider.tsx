@@ -1,54 +1,160 @@
-import { useMemo } from "react";
-import { Nav } from "@douyinfe/semi-ui";
+import React, {
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Nav, Skeleton } from "@douyinfe/semi-ui";
 import {
   IconUser,
   IconUserGroup,
   IconLayers,
   IconMenu,
   IconFile,
+  IconArticle,
 } from "@douyinfe/semi-icons";
 import { useRouter } from "next/navigation";
-import './style.css'
+import "./style.css";
 
-export async function menu() {
+export type MenuItem = {
+  itemKey: string;
+  text: string;
+  icon: ReactNode;
+  items: Array<MenuItem>;
+};
+
+export type MenuLinkMap = {
+  [key: string]: string;
+};
+
+export async function getMenu(
+  setMenus: React.Dispatch<React.SetStateAction<MenuItem[]>>,
+  setMenuLinks: React.Dispatch<React.SetStateAction<MenuLinkMap>>,
+  setSkeletonLoading: React.Dispatch<React.SetStateAction<boolean>>
+) {
   try {
     const response = await fetch("/api/menus");
-    response.json();
-  } catch (error) {}
+    if (response.ok) {
+      const body = await response.json();
+      console.log("menu", body);
+      const menuArray: Array<MenuItem> = new Array<MenuItem>();
+      const menuLinkMap: MenuLinkMap = {};
+      body.data.forEach((menuData) => {
+        const menu: MenuItem = {
+          itemKey: menuData.id.toString(),
+          text: menuData.name,
+          icon: renderIcon(menuData.icon),
+          items: [],
+        };
+        //TODO:判断当前用户是否有相应菜单权限，有权限的才做展示
+        //menuData.permission
+
+        //递归处理子菜单
+        convertMenuNode(menu, menuData.children_menu);
+
+        menuArray.push(menu);
+        menuLinkMap[menuData.id.toString()] = menuData.url;
+      });
+
+      setMenus(menuArray);
+      console.log("items:", menuArray);
+      console.log("link:", menuLinkMap);
+
+      setMenuLinks(menuLinkMap);
+    }
+  } catch (error) {
+  } finally {
+    console.log("menu finish.");
+    //回调上层关闭骨架动画
+    if (setSkeletonLoading) {
+      console.log("skeleton");
+      setSkeletonLoading(false);
+    }
+  }
 }
 
+const iconMap = {
+  IconUser: IconUser,
+  IconUserGroup: IconUserGroup,
+  IconLayers: IconLayers,
+  IconMenu: IconMenu,
+  IconFile: IconFile,
+};
+
+function renderIcon(icon: string) {
+  switch (icon) {
+    case "IconUser":
+      return <IconUser />;
+    case "IconUserGroup":
+      return <IconUserGroup />;
+    case "IconLayers":
+      return <IconLayers />;
+    case "IconMenu":
+      return <IconMenu />;
+    case "IconFile":
+      return <IconFile />;
+    default:
+      return <IconArticle />;
+  }
+}
+
+const convertMenuNode = (parentMenu: MenuItem, children) => {
+  if (children.length == 0) {
+    return;
+  }
+
+  const childrenMenu: Array<MenuItem> = new Array<MenuItem>();
+  children.forEach((child) => {
+    const menu: MenuItem = {
+      itemKey: child.id.toString(),
+      text: child.name,
+      icon: renderIcon(child.icon),
+      items: [],
+    };
+
+    if (child.children_menu.length > 0) {
+      convertMenuNode(menu, child.children_menu);
+    }
+
+    childrenMenu.push(menu);
+  });
+
+  parentMenu.items = childrenMenu;
+};
+
 export default function NavSider(props) {
-  const { selectedKey } = props;
-  const selectedKeys = [selectedKey];
-  const items = useMemo(
-    () => [
-      { itemKey: "user", text: "用户管理", icon: <IconUser /> },
-      { itemKey: "role", text: "角色管理", icon: <IconUserGroup /> },
-      { itemKey: "project", text: "组织管理", icon: <IconLayers /> },
-      { itemKey: "menu", text: "菜单管理", icon: <IconMenu /> },
-      { itemKey: "log", text: "日志管理", icon: <IconFile /> },
-    ],
-    []
+  //菜单数据
+  const [menus, setMenus] = useState([] as Array<MenuItem>);
+  //菜单链接数据
+  const [menuLinkMap, setMenuLinkMap] = useState({} as MenuLinkMap);
+
+  const placeholder = (
+    <div>
+      <Skeleton.Title style={{ width: 120, marginTop: 10 }} />
+      <Skeleton.Title style={{ width: 120, marginTop: 10 }} />
+      <Skeleton.Title style={{ width: 120, marginTop: 10 }} />
+    </div>
   );
 
-  const menuLinkMap = {
-    user: "/user",
-    role: "/role",
-    project: "/project",
-    menu: "/menu",
-    log: "/log",
-  };
+  const [loading,setSkeletonLoading] = useState(true);
+
+  useEffect(() => {
+    getMenu(setMenus, setMenuLinkMap, setSkeletonLoading);
+  }, []);
 
   const router = useRouter();
 
   return (
-    <Nav
-      items={items}
-      defaultSelectedKeys={selectedKeys}
-      footer={{
-        collapseButton: true,
-      }}
-      onSelect={(data) => router.push(menuLinkMap[data.itemKey])}
-    />
+    <Skeleton placeholder={placeholder} loading={loading} active>
+      <Nav
+        items={menus}
+        defaultSelectedKeys={["1"]}
+        footer={{
+          collapseButton: true,
+        }}
+        onSelect={(data) => router.push(menuLinkMap[data.itemKey])}
+      />
+    </Skeleton>
   );
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import './reset.css'
+// import './normalize.css'
 import './globals.css'
 
 

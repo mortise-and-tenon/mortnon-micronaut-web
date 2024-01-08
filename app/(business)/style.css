@@ -6,6 +6,12 @@
 .content {
     display: flex;
     background-color: rgb(244, 244, 244);
+    overflow: hidden;
+}
+
+.nav-style {
+    height: 100%;
+    background-color: red;
 }
 
 .bread-style {
@@ -18,8 +24,9 @@
 }
 
 .card-style {
-    height: 100%;
+    height: calc(100vh - 126px);
     margin: 0 12px 12px;
+    overflow-y: auto;
 }
 
 .action-left-style {
@@ -36,4 +43,9 @@
 
 .action-btn-style{
     margin: 0 8px;
+}
+
+/* 导航菜单字体 */
+.semi-navigation-list > .semi-navigation-item {
+    font-weight: 500;
 }

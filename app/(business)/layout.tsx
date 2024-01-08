@@ -15,7 +15,7 @@ export default function BusinessLayout({
     <Layout className="layout-almost-full-screen">
       <NavHeader selectedKey="system" />
       <Content className="content">
-        <NavSider />
+        <NavSider className="nav-style"/>
         {children}
       </Content>
     </Layout>

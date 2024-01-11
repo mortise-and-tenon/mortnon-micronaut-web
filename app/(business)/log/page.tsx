@@ -37,7 +37,10 @@ export async function getLog(
     const queryParams = new URLSearchParams({
       page: queryInfo.page.toString(),
       size: queryInfo.size.toString(),
+      property: queryInfo.property,
+      order: queryInfo.order,
     });
+
     const response = await fetch(`/api/logs?${queryParams.toString()}`);
     if (response.ok) {
       const body = await response.json();
@@ -99,6 +102,8 @@ export default function Log() {
   const [queryInfo, setQueryInfo] = useState({
     page: 0,
     size: defaultPageSize,
+    property: "time",
+    order: "desc",
   } as QueryInfo);
 
   useEffect(() => {
@@ -106,23 +111,49 @@ export default function Log() {
   }, [queryInfo]);
 
   //按条件刷新表格
-  const refreshTable = (currentPage: number, pageSize: number) => {
+  const refreshTable = (
+    currentPage: number,
+    pageSize: number,
+    property: string,
+    order: string
+  ) => {
     setLoading(true);
 
     setQueryInfo({
       page: currentPage,
       size: pageSize,
+      property: property === null ? "time" : property,
+      order: order === null ? "desc" : order,
     });
   };
 
   //变更页码和每页条数时刷新表格
   const handleChange = (currentPage: number, pageSize: number) => {
-    refreshTable(currentPage - 1, pageSize);
+    refreshTable(currentPage - 1, pageSize, "", "");
   };
 
   //初始刷新表格数据
   const refreshAll = () => {
-    refreshTable(0, defaultPageSize);
+    refreshTable(0, defaultPageSize, "", "");
+  };
+
+  const tableChange = ({ pagination, filters, sorter, extra }) => {
+    console.log("user表格变化page::", pagination);
+    console.log("user表格变化filter::", filters);
+    console.log("user表格变化sort:", sorter);
+
+    let order = "desc";
+
+    if (sorter.sortOrder === "ascend") {
+      order = "asc";
+    }
+
+    refreshTable(
+      pagination.currentPage - 1,
+      pagination.pageSize,
+      sorter.dataIndex,
+      order
+    );
   };
 
   //表格列定义
@@ -142,7 +173,13 @@ export default function Log() {
     {
       title: "操作时间",
       dataIndex: "time",
-      sorter: (a, b) => (new Date(a) > new Date(b) ? -1 : 1),
+      sorter: (a, b) => {
+        if (queryInfo.order === "asc") {
+          return new Date(a) > new Date(b) ? -1 : 1;
+        }
+
+        return new Date(a) > new Date(b) ? 1 : -1;
+      },
     },
     {
       title: "级别",
@@ -175,6 +212,7 @@ export default function Log() {
         <Table
           columns={columns}
           dataSource={queryResult.data}
+          onChange={tableChange}
           pagination={{
             currentPage: queryResult.pageNumber,
             pageSize: queryResult.pageSize,

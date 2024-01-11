@@ -14,7 +14,7 @@ import {
   IconFile,
   IconArticle,
 } from "@douyinfe/semi-icons";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import "./style.css";
 
 export type MenuItem = {
@@ -31,7 +31,8 @@ export type MenuLinkMap = {
 export async function getMenu(
   setMenus: React.Dispatch<React.SetStateAction<MenuItem[]>>,
   setMenuLinks: React.Dispatch<React.SetStateAction<MenuLinkMap>>,
-  setSkeletonLoading: React.Dispatch<React.SetStateAction<boolean>>
+  setSkeletonLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  changeMenu
 ) {
   try {
     const response = await fetch("/api/menus");
@@ -62,6 +63,7 @@ export async function getMenu(
       console.log("link:", menuLinkMap);
 
       setMenuLinks(menuLinkMap);
+      changeMenu(menuLinkMap);
     }
   } catch (error) {
   } finally {
@@ -131,29 +133,44 @@ export default function NavSider(props) {
 
   const placeholder = (
     <div>
-      <Skeleton.Title style={{ width: 120, marginTop: 10 }} />
-      <Skeleton.Title style={{ width: 120, marginTop: 10 }} />
-      <Skeleton.Title style={{ width: 120, marginTop: 10 }} />
+      <Skeleton.Title style={{ width: 240, marginTop: 10 }} />
+      <Skeleton.Title style={{ width: 240, marginTop: 10 }} />
+      <Skeleton.Title style={{ width: 240, marginTop: 10 }} />
     </div>
   );
 
-  const [loading,setSkeletonLoading] = useState(true);
+  const [loading, setSkeletonLoading] = useState(true);
+
+  const [selectedKey, setSelectedKey] = useState([]);
+
+  const changeMenu = (menuLinkMapData: MenuLinkMap) => {
+    for (let [key, value] of Object.entries(menuLinkMapData)) {
+      if (value === pathname) {
+        setSelectedKey([key]);
+      }
+    }
+  };
 
   useEffect(() => {
-    getMenu(setMenus, setMenuLinkMap, setSkeletonLoading);
+    getMenu(setMenus, setMenuLinkMap, setSkeletonLoading, changeMenu);
   }, []);
 
   const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <Skeleton placeholder={placeholder} loading={loading} active>
       <Nav
         items={menus}
         defaultSelectedKeys={["1"]}
+        selectedKeys={selectedKey}
         footer={{
           collapseButton: true,
         }}
-        onSelect={(data) => router.push(menuLinkMap[data.itemKey])}
+        onSelect={(data) => {
+          setSelectedKey([data.itemKey.toString()]);
+          router.push(menuLinkMap[data.itemKey]);
+        }}
       />
     </Skeleton>
   );

@@ -38,8 +38,6 @@ enum Sex {
 export type QueryResult = BaesQueryResult & {
   //数据
   data: Array<UserInfo>;
-  //用户名列过滤器
-  userNameFilter: Array<ColumnFilter>;
 };
 
 //角色信息定义
@@ -77,13 +75,15 @@ export async function getUser(
     const queryParams = new URLSearchParams({
       page: queryInfo.page.toString(),
       size: queryInfo.size.toString(),
+      property: queryInfo.property,
+      order: queryInfo.order,
     });
     const response = await fetch(`/api/users?${queryParams.toString()}`);
     if (response.ok) {
       const body = await response.json();
       const data = body.data;
       const userList: Array<UserInfo> = new Array<UserInfo>();
-      const userNameFilters: Array<ColumnFilter> = new Array<ColumnFilter>();
+
       data.content.forEach((user) => {
         const userInfo: UserInfo = {
           key: user.id,
@@ -109,11 +109,6 @@ export async function getUser(
         };
         userList.push(userInfo);
 
-        const userNameFilter: ColumnFilter = {
-          text: user.user_name,
-          value: user.user_name,
-        };
-        userNameFilters.push(userNameFilter);
       });
 
       userList.sort((a, b) => a.userName.localeCompare(b.userName));
@@ -126,7 +121,6 @@ export async function getUser(
         pageSize: data.page_size,
         totalSize: data.total_size,
         data: userList,
-        userNameFilter: userNameFilters,
       };
       setQueryResult(queryResult);
       setLoading(false);
@@ -307,17 +301,22 @@ export default function User() {
     {
       title: "用户名",
       dataIndex: "userName",
-      filters: queryResult.userNameFilter,
-      onFilter: (value, record) => record.userName.includes(value),
-      sorter: (a, b) => a.userName.localeCompare(b.userName),
     },
     {
       title: "用户昵称",
       dataIndex: "nickName",
-      sorter: (a, b) =>
-        a.nickName.localeCompare(b.userName, "zh-Hans-CN", {
+      sorter: (a, b) => {
+        if (queryInfo.order === "asc") {
+          return a.nickName.localeCompare(b.userName, "zh-Hans-CN", {
+            sensitivity: "accent",
+          }) > 0
+            ? 1
+            : -1;
+        }
+        return a.nickName.localeCompare(b.userName, "zh-Hans-CN", {
           sensitivity: "accent",
-        }),
+        }) < 0 ? -1 : 1;
+      },
     },
     {
       title: "性别",
@@ -446,6 +445,8 @@ export default function User() {
   const [queryInfo, setQueryInfo] = useState({
     page: 0,
     size: defaultPageSize,
+    property: "time",
+    order: "desc",
   } as QueryInfo);
 
   //性别选项
@@ -473,23 +474,45 @@ export default function User() {
   }, [queryInfo]);
 
   //按条件刷新表格
-  const refreshTable = (currentPage: number, pageSize: number) => {
+  const refreshTable = (
+    currentPage: number,
+    pageSize: number,
+    property: string,
+    order: string
+  ) => {
     setLoading(true);
 
     setQueryInfo({
       page: currentPage,
       size: pageSize,
+      property: property === null ? "time" : property,
+      order: order === null ? "desc" : order,
     });
+  };
+
+  const tableChange = ({ pagination, filters, sorter, extra }) => {
+    let order = "desc";
+
+    if (sorter.sortOrder === "ascend") {
+      order = "asc";
+    }
+
+    refreshTable(
+      pagination.currentPage - 1,
+      pagination.pageSize,
+      sorter.dataIndex,
+      order
+    );
   };
 
   //变更页码和每页条数时刷新表格
   const handleChange = (currentPage: number, pageSize: number) => {
-    refreshTable(currentPage - 1, pageSize);
+    refreshTable(currentPage - 1, pageSize, "", "");
   };
 
   //初始刷新表格数据
   const refreshAll = () => {
-    refreshTable(0, defaultPageSize);
+    refreshTable(0, defaultPageSize, "", "");
   };
 
   const formApiRef = useRef();
@@ -727,6 +750,7 @@ export default function User() {
         <Table
           columns={columns}
           dataSource={queryResult.data}
+          onChange={tableChange}
           pagination={{
             currentPage: queryResult.pageNumber,
             pageSize: queryResult.pageSize,

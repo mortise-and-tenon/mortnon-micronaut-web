@@ -10,6 +10,10 @@ export type QueryInfo = {
   page: number;
   //查询每页数量
   size: number;
+  //排序字段
+  property: string;
+  //排序顺序
+  order: string;
 };
 
 //基础分页查询结果

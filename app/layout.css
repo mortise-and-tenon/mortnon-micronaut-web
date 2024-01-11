@@ -1,53 +1,37 @@
-/* 全屏 */
+
 .layout{
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-}
-
-/* 登录页背景 */
-.background-style {
-    /* background-image: url('/bg.jpg');
-    background-size: cover;
-    background-position: center;
-    overflow: hidden; */
-    background-color: rgb(252, 252, 252);
-}
-
-.header-style {
+  }
+  
+  .layout-header {
     height: 64px;
     padding: 0 12px;
     line-height: 64px;
     color: black;
     background-color: rgba(0, 0, 0, 0);
-
+  
     display: flex;
     justify-content: flex-start;
     align-items: center;
-}
-
-.title-style {
+  }
+  
+  .layout-title {
     margin: 0 0 0 16px;
-}
-
-.content-style {
+  }
+  
+  .layout-content {
     flex: 1;
     
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-end
-}
-
-.form-style {
-    width: 40%;
-    min-width: 100px;
-    max-width: 400px;
-    margin-right: 10%;
-}
-
-/* 版权 footer */
-.footer-style {
+  }
+  
+  .layout-footer {
+    height: 24px;
     text-align: center;
     color: rgba(0, 0, 0, .6);
     background-color: rgba(0, 0, 0, 0);

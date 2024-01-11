@@ -1,21 +1,22 @@
 "use client";
 
-import { Layout,Nav } from "@douyinfe/semi-ui";
-
-
+import Image from "next/image";
+import { Button } from "@mui/material";
 import "./style.css";
-import NavHeader from "./_modules/navHeader";
+import Footer from "./_modules/footer";
+import NavLogo from "./_modules/navLogo";
+import Header from "./_modules/header";
 
-const { Footer, Content } = Layout;
+
 
 export default function Home() {
   return (
-    <Layout className="layout">
-      <NavHeader selectedKey="home"/>
-      <Content>
- content
-      </Content>
-      <Footer>footer</Footer>
-    </Layout>
+    <div className="layout">
+      <Header>
+        <NavLogo/>
+      </Header>
+      <div className="layout-content"><Button variant="contained">Hello world</Button></div>
+      <Footer/>
+    </div>
   );
 }

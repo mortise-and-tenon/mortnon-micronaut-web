@@ -2,10 +2,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Layout, Divider, Form, Button, Spin, Toast } from "@douyinfe/semi-ui";
-import "./style.css";
 
-const { Header, Footer, Content } = Layout;
+import "./style.css";
+import NavLogo from "../_modules/navLogo";
+import Footer from "../_modules/footer";
+import Header from "../_modules/header";
+import { Button, Divider, FormControl, FormLabel, Input, TextField } from "@mui/material";
 
 export default function Login() {
   //是否登录中
@@ -14,44 +16,48 @@ export default function Login() {
   const router = useRouter();
 
   //提交
-  const onSubmit = async (values) => {
-    setLoading(true);
-    console.log(values);
-    try {
-      const response = await fetch("/api/login/password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log("success:", data);
-        router.push("/");
-      } else {
-        const data = await response.json();
-        //TODO:前端有一个错误码和国际化文字的对应关系，用错误码对应的文字显示
-        Toast.warning(data.message);
-      }
-    } catch (error) {
-      Toast.error("登录发生异常，请重试");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const onSubmit = async (values) => {
+  //   setLoading(true);
+  //   console.log(values);
+  //   try {
+  //     const response = await fetch("/api/login/password", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(values),
+  //       credentials: "include",
+  //     });
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       console.log("success:", data);
+  //       router.push("/");
+  //     } else {
+  //       const data = await response.json();
+  //       //TODO:前端有一个错误码和国际化文字的对应关系，用错误码对应的文字显示
+  //       Toast.warning(data.message);
+  //     }
+  //   } catch (error) {
+  //     Toast.error("登录发生异常，请重试");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
-    <Layout className="layout-almost-full-screen background-style">
-      <Header className="header-style">
-        <Image src="/clover.png" alt="Logo" width={50} height={50} />
-        <h1 className="title-style">Monrton 管理系统</h1>
+    <div className="layout background-style">
+      <Header>
+        <NavLogo />
       </Header>
-      <Content className="content-style">
+      <div className="layout-content">
         <div className="form-style">
           <Divider>登录</Divider>
-          <Spin tip="登录中" spinning={loading}>
+          <FormControl>
+    <FormLabel>Enter Name</FormLabel>
+    <Input></Input>
+    <Button variant="contained">Submit</Button>
+</FormControl>
+          {/* <Spin tip="登录中" spinning={loading}>
             <Form onSubmit={onSubmit}>
               <Form.Input
                 field="username"
@@ -72,10 +78,10 @@ export default function Login() {
               </Button>
           
             </Form>
-          </Spin>
+          </Spin> */}
         </div>
-      </Content>
-      <Footer className="footer-style">©2023 Mortnon.</Footer>
-    </Layout>
+      </div>
+      <Footer />
+    </div>
   );
 }

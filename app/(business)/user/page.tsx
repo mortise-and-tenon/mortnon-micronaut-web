@@ -445,7 +445,7 @@ export default function User() {
   const [queryInfo, setQueryInfo] = useState({
     page: 0,
     size: defaultPageSize,
-    property: "time",
+    property: "nickName",
     order: "desc",
   } as QueryInfo);
 
@@ -485,7 +485,7 @@ export default function User() {
     setQueryInfo({
       page: currentPage,
       size: pageSize,
-      property: property === null ? "time" : property,
+      property: property === null ? "nickName" : property,
       order: order === null ? "desc" : order,
     });
   };

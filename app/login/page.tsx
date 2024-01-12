@@ -18,6 +18,7 @@ import {
   IconButton,
   FormHelperText,
   LinearProgress,
+  Alert,
 } from "@mui/material";
 
 import { Visibility, VisibilityOff, Person, Lock } from "@mui/icons-material";
@@ -27,6 +28,7 @@ import { getFormValues } from "../lib/formAction";
 export default function Login() {
   //是否登录中
   const [loading, setLoading] = useState(false);
+  const [tipMsg, setTipMsg] = useState("");
 
   const router = useRouter();
 
@@ -38,6 +40,7 @@ export default function Login() {
 
   //提交
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    setTipMsg("");
     setLoading(true);
     const formJson = getFormValues(event);
     setUserNameIsError(formJson.userName === "");
@@ -63,10 +66,10 @@ export default function Login() {
       } else {
         const data = await response.json();
         //TODO:前端有一个错误码和国际化文字的对应关系，用错误码对应的文字显示
-        // Toast.warning(data.message);
+        setTipMsg(data.message);
       }
     } catch (error) {
-      // Toast.error("登录发生异常，请重试");
+      setTipMsg("登录发生异常，请重试");
     } finally {
       setLoading(false);
     }
@@ -103,7 +106,8 @@ export default function Login() {
         <div className="form-style">
           <Divider>账号登录</Divider>
           <form onSubmit={onSubmit}>
-            {loading && (<LinearProgress className="formItemStyle"/>)}
+            {loading && <LinearProgress className="formItemStyle" />}
+            {tipMsg !== "" && <Alert severity="error">{tipMsg}</Alert>}
             <Input
               className="formItemStyle"
               id="userName"
@@ -112,6 +116,7 @@ export default function Login() {
               variant="standard"
               fullWidth
               onBlur={userNameValidator}
+              {...(loading ? { disabled: true } : {})}
               {...(userNameIsError ? { error: true } : {})}
               startAdornment={
                 <InputAdornment position="start">
@@ -134,6 +139,7 @@ export default function Login() {
               fullWidth
               type="password"
               onBlur={passwordValidator}
+              {...(loading ? { disabled: true } : {})}
               {...(passwordIsError ? { error: true } : {})}
               helperText={passwordIsError ? passwordErrmsg : ""}
               startAdornment={
@@ -162,6 +168,7 @@ export default function Login() {
               variant="contained"
               fullWidth
               type="submit"
+              {...(loading ? { disabled: true } : {})}
             >
               登录
             </Button>

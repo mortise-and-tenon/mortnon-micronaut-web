@@ -1,13 +1,28 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 import "./style.css";
 import NavLogo from "../_modules/navLogo";
 import Footer from "../_modules/footer";
 import Header from "../_modules/header";
-import { Button, Divider, FormControl, FormLabel, Input, TextField } from "@mui/material";
+import {
+  Button,
+  Divider,
+  FormControl,
+  FormLabel,
+  Input,
+  InputLabel,
+  TextField,
+  InputAdornment,
+  IconButton,
+  FormHelperText,
+  LinearProgress,
+} from "@mui/material";
+
+import { Visibility, VisibilityOff, Person, Lock } from "@mui/icons-material";
+
+import { getFormValues } from "../lib/formAction";
 
 export default function Login() {
   //是否登录中
@@ -15,34 +30,69 @@ export default function Login() {
 
   const router = useRouter();
 
+  const userNameErrmsg = "用户名不能为空";
+  const passwordErrmsg = "密码不能为空";
+
+  const [userNameIsError, setUserNameIsError] = useState(false);
+  const [passwordIsError, setPasswordIsError] = useState(false);
+
   //提交
-  // const onSubmit = async (values) => {
-  //   setLoading(true);
-  //   console.log(values);
-  //   try {
-  //     const response = await fetch("/api/login/password", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(values),
-  //       credentials: "include",
-  //     });
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       console.log("success:", data);
-  //       router.push("/");
-  //     } else {
-  //       const data = await response.json();
-  //       //TODO:前端有一个错误码和国际化文字的对应关系，用错误码对应的文字显示
-  //       Toast.warning(data.message);
-  //     }
-  //   } catch (error) {
-  //     Toast.error("登录发生异常，请重试");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    setLoading(true);
+    const formJson = getFormValues(event);
+    setUserNameIsError(formJson.userName === "");
+    setPasswordIsError(formJson.password === "");
+
+    if (formJson.username === "" || formJson.password === "") {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/login/password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formJson),
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("success:", data);
+        router.push("/");
+      } else {
+        const data = await response.json();
+        //TODO:前端有一个错误码和国际化文字的对应关系，用错误码对应的文字显示
+        // Toast.warning(data.message);
+      }
+    } catch (error) {
+      // Toast.error("登录发生异常，请重试");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const userNameValidator = (event: React.ChangeEvent) => {
+    const userName = event.target.value;
+    setUserNameIsError(userName === "");
+  };
+
+  const passwordValidator = (event: React.ChangeEvent) => {
+    const password = event.target.value;
+    setPasswordIsError(password === "");
+  };
+
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const clickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
+
+  const handleMouseDownPassword = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+  };
 
   return (
     <div className="layout background-style">
@@ -51,34 +101,71 @@ export default function Login() {
       </Header>
       <div className="layout-content">
         <div className="form-style">
-          <Divider>登录</Divider>
-          <FormControl>
-    <FormLabel>Enter Name</FormLabel>
-    <Input></Input>
-    <Button variant="contained">Submit</Button>
-</FormControl>
-          {/* <Spin tip="登录中" spinning={loading}>
-            <Form onSubmit={onSubmit}>
-              <Form.Input
-                field="username"
-                noLabel={true}
-                placeholder={"用户名"}
-                rules={[{ required: true, message: "请输入用户名" }]}
-              />
-              <Form.Input
-                field="password"
-                noLabel={true}
-                mode="password"
-                placeholder={"密码"}
-                rules={[{ required: true, message: "请输入密码" }]}
-              />
+          <Divider>账号登录</Divider>
+          <form onSubmit={onSubmit}>
+            {loading && (<LinearProgress className="formItemStyle"/>)}
+            <Input
+              className="formItemStyle"
+              id="userName"
+              name="username"
+              placeholder="用户名"
+              variant="standard"
+              fullWidth
+              onBlur={userNameValidator}
+              {...(userNameIsError ? { error: true } : {})}
+              startAdornment={
+                <InputAdornment position="start">
+                  <Person />
+                </InputAdornment>
+              }
+            />
+            {userNameIsError && (
+              <FormHelperText {...(userNameIsError ? { error: true } : {})}>
+                {userNameErrmsg}
+              </FormHelperText>
+            )}
 
-              <Button theme="solid" type="primary" htmlType="submit">
-                登录
-              </Button>
-          
-            </Form>
-          </Spin> */}
+            <Input
+              className="formItemStyle"
+              id="password"
+              name="password"
+              placeholder="密码"
+              variant="standard"
+              fullWidth
+              type="password"
+              onBlur={passwordValidator}
+              {...(passwordIsError ? { error: true } : {})}
+              helperText={passwordIsError ? passwordErrmsg : ""}
+              startAdornment={
+                <InputAdornment position="start">
+                  <Lock />
+                </InputAdornment>
+              }
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={clickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+            {passwordIsError && (
+              <FormHelperText {...(passwordIsError ? { error: true } : {})}>
+                {passwordErrmsg}
+              </FormHelperText>
+            )}
+            <Button
+              className="formItemStyle"
+              variant="contained"
+              fullWidth
+              type="submit"
+            >
+              登录
+            </Button>
+          </form>
         </div>
       </div>
       <Footer />

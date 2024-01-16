@@ -1,10 +1,14 @@
 "use client";
 
-import Footer from "../_modules/footer";
-import NavLogo from "../_modules/navLogo";
+import {
+  Box,
+  CssBaseline,
+  Toolbar
+} from "@mui/material";
+
+
 import Header from "../_modules/header";
-import { Link, ListItemIcon, ListItemText, MenuItem, MenuList } from "@mui/material";
-import { ContentCopy, ContentCut, ContentPaste } from "@mui/icons-material";
+import NavSider from "../_modules/navSider";
 
 export default function BusinessLayout({
   children,
@@ -12,38 +16,25 @@ export default function BusinessLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="layout">
-      <Header>
-        <NavLogo />
-        <Link href="/" underline="none" color="inherit">首页</Link>
-        <Link href="/user" underline="none" >系统管理</Link>
-      </Header>
-      <div className="layout-content">
-        <div className="nav-style">
-          <MenuList>
-            <MenuItem>
-              <ListItemIcon>
-                <ContentCut fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Cut</ListItemText>
-            </MenuItem>
-            <MenuItem>
-              <ListItemIcon>
-                <ContentCopy fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Copy</ListItemText>
-            </MenuItem>
-            <MenuItem>
-              <ListItemIcon>
-                <ContentPaste fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Paste</ListItemText>
-            </MenuItem>
-          </MenuList>
-        </div>
+    <Box sx={{ display: "flex" }}>
+      <CssBaseline />
+      <Header />
+      <NavSider />
+      <Box
+        component="main"
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === "light"
+              ? theme.palette.grey[100]
+              : theme.palette.grey[900],
+          flexGrow: 1,
+          height: "100vh",
+          overflow: "auto",
+        }}
+      >
+        <Toolbar />
         {children}
-      </div>
-      <Footer />
-    </div>
+      </Box>
+    </Box>
   );
 }

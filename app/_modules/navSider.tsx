@@ -11,6 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import NoteIcon from "@mui/icons-material/Note";
 import PersonIcon from "@mui/icons-material/Person";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
+import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import {
   Collapse,
   Divider,
@@ -141,13 +142,10 @@ const convertMenuNode = (parentMenu: MenuInfo, children) => {
 export default function NavSider(props) {
   //菜单数据
   const [menus, setMenus] = useState([] as Array<MenuInfo>);
-  //菜单链接数据
-  const [menuLinkMap, setMenuLinkMap] = useState({} as MenuLinkMap);
   //有菜单的父菜单状态
   const [menuState, SetMenuState] = useState({} as MenuStateMap);
 
   const [loading, setSkeletonLoading] = useState(true);
-
 
   useEffect(() => {
     getMenu(setMenus, setSkeletonLoading, SetMenuState);
@@ -200,7 +198,7 @@ export default function NavSider(props) {
   };
 
   return (
-    <Drawer variant="permanent" sx={{ pt: "64px" }} open={open}>
+    <Drawer variant="permanent" sx={{ pt: "64px"}} open={open}>
       <List component="nav">
         {menus.map((menu, index) => (
           <React.Fragment key={menu.id}>
@@ -233,24 +231,23 @@ export default function NavSider(props) {
               >
                 <ListItemIcon>
                   <ListItemIcon>{menu.icon}</ListItemIcon>
-                  <ListItemText primary={menu.name} />
                 </ListItemIcon>
+                <ListItemText primary={menu.name} />
               </ListItemButton>
             )}
           </React.Fragment>
         ))}
       </List>
-      <Divider />
       <Toolbar
         sx={{
+          pl: "16px",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          alignItems: "start-end",
           px: [1],
         }}
       >
         <IconButton onClick={toggleDrawer}>
-          <ChevronLeftIcon />
+          <MenuOpenIcon />
         </IconButton>
       </Toolbar>
     </Drawer>

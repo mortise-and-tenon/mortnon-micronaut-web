@@ -185,46 +185,6 @@ export default function Log() {
   ];
 
   return (
-    <div className="content-style">
-      <Breadcrumbs className="bread-style">
-        <Typography color="text.primary">系统管理</Typography>
-        <Typography color="text.primary">日志管理</Typography>
-      </Breadcrumbs>
-      <div className="card-style">
-        log content
-      </div>
-    </div>
-    // <Layout>
-    //   <Breadcrumb className="bread-style">
-    //     <Breadcrumb.Item noLink={true}>系统管理</Breadcrumb.Item>
-    //     <Breadcrumb.Item noLink={true}>日志管理</Breadcrumb.Item>
-    //   </Breadcrumb>
-    //   <Card className="card-style">
-    //     <div className="action-style">
-    //       <Tooltip content="刷新表格">
-    //         <Button
-    //           theme="borderless"
-    //           icon={<IconRefresh />}
-    //           aria-label="刷新页面"
-    //           className="action-btn-style"
-    //           onClick={refreshAll}
-    //         />
-    //       </Tooltip>
-    //     </div>
-    //     <Table
-    //       columns={columns}
-    //       dataSource={queryResult.data}
-    //       onChange={tableChange}
-    //       pagination={{
-    //         currentPage: queryResult.pageNumber,
-    //         pageSize: queryResult.pageSize,
-    //         total: queryResult.totalSize,
-    //         showSizeChanger: true,
-    //         onChange: handleChange,
-    //       }}
-    //       loading={loading}
-    //     />
-    //   </Card>
-    // </Layout>
+    <p>log</p>
   );
 }

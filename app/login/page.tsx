@@ -1,29 +1,40 @@
 "use client";
-import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 
-import "./style.css";
-import NavLogo from "../_modules/navLogo";
-import Footer from "../_modules/footer";
-import Header from "../_modules/header";
+import Image from "next/image";
+
 import {
+  Alert,
+  Avatar,
+  Box,
   Button,
   Divider,
   FormControl,
-  FormLabel,
-  Input,
-  InputLabel,
-  TextField,
-  InputAdornment,
-  IconButton,
   FormHelperText,
+  Grid,
+  IconButton,
+  Input,
+  InputAdornment,
   LinearProgress,
-  Alert,
+  Typography,
+  AppBar,
+  Toolbar,
+  Container,
 } from "@mui/material";
+import Footer from "../_modules/footer";
+import "./style.css";
 
-import { Visibility, VisibilityOff, Person, Lock } from "@mui/icons-material";
+import {
+  Lock,
+  Person,
+  Visibility,
+  VisibilityOff,
+  LockOutlined,
+} from "@mui/icons-material";
 
 import { getFormValues } from "../lib/formAction";
+import NavLogo from "../_modules/navLogo";
 
 export default function Login() {
   //是否登录中
@@ -41,14 +52,15 @@ export default function Login() {
   //提交
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     setTipMsg("");
-    setLoading(true);
     const formJson = getFormValues(event);
-    setUserNameIsError(formJson.userName === "");
+    setUserNameIsError(formJson.username === "");
     setPasswordIsError(formJson.password === "");
 
     if (formJson.username === "" || formJson.password === "") {
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await fetch("/api/login/password", {
@@ -98,84 +110,136 @@ export default function Login() {
   };
 
   return (
-    <div className="layout background-style">
-      <Header>
-        <NavLogo />
-      </Header>
-      <div className="layout-content">
-        <div className="form-style">
-          <Divider>账号登录</Divider>
-          <form onSubmit={onSubmit}>
-            {loading && <LinearProgress className="formItemStyle" />}
-            {tipMsg !== "" && <Alert severity="error">{tipMsg}</Alert>}
-            <Input
-              className="formItemStyle"
-              id="userName"
-              name="username"
-              placeholder="用户名"
-              variant="standard"
-              fullWidth
-              onBlur={userNameValidator}
-              {...(loading ? { disabled: true } : {})}
-              {...(userNameIsError ? { error: true } : {})}
-              startAdornment={
-                <InputAdornment position="start">
-                  <Person />
-                </InputAdornment>
-              }
-            />
-            {userNameIsError && (
-              <FormHelperText {...(userNameIsError ? { error: true } : {})}>
-                {userNameErrmsg}
-              </FormHelperText>
-            )}
-
-            <Input
-              className="formItemStyle"
-              id="password"
-              name="password"
-              placeholder="密码"
-              variant="standard"
-              fullWidth
-              type="password"
-              onBlur={passwordValidator}
-              {...(loading ? { disabled: true } : {})}
-              {...(passwordIsError ? { error: true } : {})}
-              helperText={passwordIsError ? passwordErrmsg : ""}
-              startAdornment={
-                <InputAdornment position="start">
-                  <Lock />
-                </InputAdornment>
-              }
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={clickShowPassword}
-                    onMouseDown={handleMouseDownPassword}
+    <Grid
+      container
+      component="main"
+      sx={{ height: "100vh" }}
+      direction="column"
+    >
+      <Grid sx={{ height: 64 }}>
+        <AppBar position="static">
+          <Container maxWidth="xl">
+            <Toolbar disableGutters>
+              <NavLogo />
+            </Toolbar>
+          </Container>
+        </AppBar>
+      </Grid>
+      <Grid container sx={{ height: "calc(100vh - 64px)" }}>
+        <Grid
+          item
+          xs={false}
+          sm={4}
+          md={7}
+          sx={{
+            backgroundImage:
+              "url(https://source.unsplash.com/random?wallpapers)",
+            backgroundRepeat: "no-repeat",
+            backgroundColor: (t) =>
+              t.palette.mode === "light"
+                ? t.palette.grey[50]
+                : t.palette.grey[900],
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <Grid item sm={8} md={5}>
+          <Box
+            fullWidth
+            sx={{
+              my: 8,
+              mx: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Avatar>
+              <LockOutlined />
+            </Avatar>
+            <Typography component="h1" variant="h5">
+              账号登录
+            </Typography>
+            <Box component="form" noValidate onSubmit={onSubmit}>
+              {loading && <LinearProgress sx={{ my: "8px" }} />}
+              {tipMsg !== "" && <Alert severity="error">{tipMsg}</Alert>}
+              <FormControl fullWidth>
+                <Input
+                  id="userName"
+                  name="username"
+                  placeholder="用户名"
+                  variant="standard"
+                  fullWidth
+                  sx={{ mt: 3, mb: 2 }}
+                  onBlur={userNameValidator}
+                  {...(loading ? { disabled: true } : {})}
+                  {...(userNameIsError ? { error: true } : {})}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <Person />
+                    </InputAdornment>
+                  }
+                />
+                {userNameIsError && (
+                  <FormHelperText
+                    fullWidth
+                    {...(userNameIsError ? { error: true } : {})}
                   >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              }
-            />
-            {passwordIsError && (
-              <FormHelperText {...(passwordIsError ? { error: true } : {})}>
-                {passwordErrmsg}
-              </FormHelperText>
-            )}
-            <Button
-              className="formItemStyle"
-              variant="contained"
-              fullWidth
-              type="submit"
-              {...(loading ? { disabled: true } : {})}
-            >
-              登录
-            </Button>
-          </form>
-        </div>
-      </div>
-      <Footer />
-    </div>
+                    {userNameErrmsg}
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <FormControl fullWidth>
+                <Input
+                  id="password"
+                  name="password"
+                  placeholder="密码"
+                  variant="standard"
+                  fullWidth
+                  sx={{ mt: 3, mb: 2 }}
+                  type={showPassword ? "text" : "password"}
+                  onBlur={passwordValidator}
+                  {...(loading ? { disabled: true } : {})}
+                  {...(passwordIsError ? { error: true } : {})}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  }
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={clickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+                {passwordIsError && (
+                  <FormHelperText
+                    fullWidth
+                    {...(passwordIsError ? { error: true } : {})}
+                  >
+                    {passwordErrmsg}
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <Button
+                variant="contained"
+                fullWidth
+                sx={{ mt: 3, mb: 2 }}
+                type="submit"
+                {...(loading ? { disabled: true } : {})}
+              >
+                登录
+              </Button>
+            </Box>
+          </Box>
+          <Footer />
+        </Grid>
+      </Grid>
+    </Grid>
   );
 }

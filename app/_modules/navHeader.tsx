@@ -27,8 +27,8 @@ export default function NavHeader(props) {
     <Nav
       mode="horizontal"
       header={{
-        logo: <Image src="/clover.png" alt="Logo" width={50} height={50} />,
-        text: "Mortnon 管理平台",
+        logo: <Image src="/clover.png" alt="Logo" width={46} height={46} />,
+        text: "Mortnon 后台管理系统",
       }}
       items={items}
       selectedKeys={selectedKeys}

@@ -21,6 +21,7 @@ export type MenuItem = {
   itemKey: string;
   text: string;
   icon: ReactNode;
+  level: number;
   items: Array<MenuItem>;
 };
 
@@ -46,13 +47,14 @@ export async function getMenu(
           itemKey: menuData.id.toString(),
           text: menuData.name,
           icon: renderIcon(menuData.icon),
+          level: 1,
           items: [],
         };
         //TODO:判断当前用户是否有相应菜单权限，有权限的才做展示
         //menuData.permission
 
         //递归处理子菜单
-        convertMenuNode(menu, menuData.children_menu);
+        convertMenuNode(menu, menuLinkMap, menuData.children_menu);
 
         menuArray.push(menu);
         menuLinkMap[menuData.id.toString()] = menuData.url;
@@ -101,7 +103,11 @@ function renderIcon(icon: string) {
   }
 }
 
-const convertMenuNode = (parentMenu: MenuItem, children) => {
+const convertMenuNode = (
+  parentMenu: MenuItem,
+  menuLinkMap: MenuLinkMap,
+  children
+) => {
   if (children.length == 0) {
     return;
   }
@@ -112,14 +118,16 @@ const convertMenuNode = (parentMenu: MenuItem, children) => {
       itemKey: child.id.toString(),
       text: child.name,
       icon: renderIcon(child.icon),
+      level: parentMenu.level + 1,
       items: [],
     };
 
     if (child.children_menu.length > 0) {
-      convertMenuNode(menu, child.children_menu);
+      convertMenuNode(menu, menuLinkMap, child.children_menu);
     }
 
     childrenMenu.push(menu);
+    menuLinkMap[child.id.toString()] = child.url;
   });
 
   parentMenu.items = childrenMenu;
@@ -161,6 +169,7 @@ export default function NavSider(props) {
   return (
     <Skeleton placeholder={placeholder} loading={loading} active>
       <Nav
+        limitIndent={false}
         items={menus}
         defaultSelectedKeys={["1"]}
         selectedKeys={selectedKey}

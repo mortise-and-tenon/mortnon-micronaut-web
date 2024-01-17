@@ -62,3 +62,13 @@ export type LogInfo = {
   level: string;
   time: string;
 };
+
+//组织数据定义
+export type ProjectInfo = {
+  //组织id对应的表格key
+  key: number;
+  name: string;
+  label: string,
+  description: string;
+  children: Array<ProjectInfo>;
+};

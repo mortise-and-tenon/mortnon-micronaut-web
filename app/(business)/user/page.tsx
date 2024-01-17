@@ -48,21 +48,21 @@ export type RoleInfo = {
 
 //创建用户的组织角色信息定义
 export type CreateUserProjectRole = {
-  projectId: number;
-  roleId: number;
+  project_id: number;
+  role_id: number;
 };
 
 //创建用户的信息定义
 export type CreateUserData = {
-  userName: string;
-  nickName: string;
+  user_name: string;
+  nick_name: string;
   password: string;
-  repeatPassword: string;
+  repeat_password: string;
   email: string;
   phone: string;
   head: string;
   sex: number;
-  projectRoles: Array<CreateUserProjectRole>;
+  project_roles: Array<CreateUserProjectRole>;
 };
 
 //获取用户数据
@@ -268,7 +268,7 @@ export default function User() {
     setDialogDisabled(true);
     const editUserData = {
       id: rowUserInfo.key,
-      nickName: values.nickname,
+      nick_name: values.nickname,
       email: values.email,
       phone: values.phone,
       sex: values.sex,
@@ -287,6 +287,8 @@ export default function User() {
       if (response.ok) {
         Toast.success("修改用户成功");
         setEditDialogVisible(false);
+        //操作成功后刷新表格
+        refreshAll();
       } else {
         Toast.error("修改用户失败");
       }
@@ -547,21 +549,21 @@ export default function User() {
       new Array<CreateUserProjectRole>();
 
     const userProjectRole: CreateUserProjectRole = {
-      projectId: values.projectid,
-      roleId: values.roleid,
+      project_id: values.projectid,
+      role_id: values.roleid,
     };
     createUserProjectRoleArray.push(userProjectRole);
 
     const createUserData: CreateUserData = {
-      nickName: values.nickname,
-      userName: values.username,
+      nick_name: values.nickname,
+      user_name: values.username,
       password: values.password,
-      repeatPassword: values.repeatpassword,
+      repeat_password: values.repeatpassword,
       email: values.email,
       phone: values.phone,
       head: values.head,
       sex: values.sex,
-      projectRoles: createUserProjectRoleArray,
+      project_roles: createUserProjectRoleArray,
     };
 
     try {

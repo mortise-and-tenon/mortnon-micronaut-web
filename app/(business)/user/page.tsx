@@ -41,7 +41,7 @@ export type QueryResult = BaesQueryResult & {
 };
 
 //角色信息定义
-export type RoleInfo = {
+export type RoleDataInfo = {
   value: number;
   label: string;
 };
@@ -178,7 +178,7 @@ const convertProjectNode = (parentNode: ProjectTreeNode, dataList: []) => {
 
 //获取角色信息
 export async function getRole(
-  setRole: React.Dispatch<React.SetStateAction<Array<RoleInfo>>>,
+  setRole: React.Dispatch<React.SetStateAction<Array<RoleDataInfo>>>,
   setRoleLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   try {
@@ -187,9 +187,9 @@ export async function getRole(
       const body = await response.json();
       const data = body.data;
 
-      const roleArray: Array<RoleInfo> = new Array<RoleInfo>();
+      const roleArray: Array<RoleDataInfo> = new Array<RoleDataInfo>();
       data.content.forEach((role) => {
-        const roleInfo: RoleInfo = {
+        const roleInfo: RoleDataInfo = {
           value: role.id,
           label: role.name,
         };
@@ -467,7 +467,7 @@ export default function User() {
   const [projectTree, setProjectTree] = useState([] as Array<ProjectTreeNode>);
 
   //角色数据
-  const [roleInfo, setRoleInfo] = useState([] as Array<RoleInfo>);
+  const [roleInfo, setRoleInfo] = useState([] as Array<RoleDataInfo>);
   //角色加载状态
   const [roleLoading, setRoleLoading] = useState(true);
 

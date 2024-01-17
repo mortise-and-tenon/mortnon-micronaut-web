@@ -5,10 +5,10 @@
 
 /* 登录页背景 */
 .background-style {
-    /* background-image: url('/bg.jpg');
+    background-image: url('https://source.unsplash.com/random?wallpapers');
     background-size: cover;
     background-position: center;
-    overflow: hidden; */
+    overflow: hidden;
     background-color: rgb(252, 252, 252);
 }
 

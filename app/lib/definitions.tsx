@@ -72,3 +72,12 @@ export type ProjectInfo = {
   description: string;
   children: Array<ProjectInfo>;
 };
+
+export type RoleInfo = {
+  //角色id对应的表格key
+  key:number,
+  name: string,
+  identifier: string,
+  description: string,
+  permissions: Array<string>,
+};

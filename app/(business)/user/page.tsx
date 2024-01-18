@@ -18,7 +18,7 @@ import {
   UserInfo,
   QueryInfo,
   BaesQueryResult,
-  ProjectTreeNode,
+  TreeNode,
 } from "@/app/lib/definitions";
 
 import "../style.css";
@@ -133,22 +133,22 @@ export async function getUser(
 
 //获取树型组织信息
 export async function getProjectTree(
-  setProjectTree: React.Dispatch<React.SetStateAction<Array<ProjectTreeNode>>>
+  setProjectTree: React.Dispatch<React.SetStateAction<Array<TreeNode>>>
 ) {
   try {
     const response = await fetch("/api/projects/tree");
     if (response.ok) {
       const body = await response.json();
       const data = body.data;
-      const rootNode: ProjectTreeNode = {
+      const rootNode: TreeNode = {
         key: data.id.toString(),
         label: data.name,
         children: [],
       };
       convertProjectNode(rootNode, data.children);
 
-      const topProjectTreeNodeArray: Array<ProjectTreeNode> =
-        new Array<ProjectTreeNode>();
+      const topProjectTreeNodeArray: Array<TreeNode> =
+        new Array<TreeNode>();
       topProjectTreeNodeArray.push(rootNode);
       setProjectTree(topProjectTreeNodeArray);
     }
@@ -157,10 +157,10 @@ export async function getProjectTree(
   }
 }
 
-const convertProjectNode = (parentNode: ProjectTreeNode, dataList: []) => {
-  const children: Array<ProjectTreeNode> = new Array<ProjectTreeNode>();
+const convertProjectNode = (parentNode: TreeNode, dataList: []) => {
+  const children: Array<TreeNode> = new Array<TreeNode>();
   dataList.forEach((data) => {
-    const node: ProjectTreeNode = {
+    const node: TreeNode = {
       key: data.id,
       label: data.name,
       children: [],
@@ -464,7 +464,7 @@ export default function User() {
   ];
 
   //组织树数据
-  const [projectTree, setProjectTree] = useState([] as Array<ProjectTreeNode>);
+  const [projectTree, setProjectTree] = useState([] as Array<TreeNode>);
 
   //角色数据
   const [roleInfo, setRoleInfo] = useState([] as Array<RoleDataInfo>);

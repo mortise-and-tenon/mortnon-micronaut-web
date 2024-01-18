@@ -44,10 +44,10 @@ export type UserInfo = {
 };
 
 //组织树信息定义
-export type ProjectTreeNode = {
+export type TreeNode = {
   key: string;
   label: string;
-  children: Array<ProjectTreeNode>;
+  children: Array<TreeNode>;
 };
 
 //日志数据定义
@@ -68,16 +68,28 @@ export type ProjectInfo = {
   //组织id对应的表格key
   key: number;
   name: string;
-  label: string,
+  label: string;
   description: string;
   children: Array<ProjectInfo>;
 };
 
 export type RoleInfo = {
   //角色id对应的表格key
-  key:number,
-  name: string,
-  identifier: string,
-  description: string,
-  permissions: Array<string>,
+  key: number;
+  name: string;
+  identifier: string;
+  description: string;
+  permissions: Array<string>;
+};
+
+export type MenuInfo = {
+  //菜单id对应的表格key
+  key: number;
+  parentId: number;
+  name: string;
+  url: string;
+  icon: string;
+  order: number;
+  permission: string;
+  children: Array<MenuInfo>;
 };

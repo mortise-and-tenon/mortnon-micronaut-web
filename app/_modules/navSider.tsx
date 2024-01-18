@@ -13,6 +13,7 @@ import {
   IconMenu,
   IconFile,
   IconArticle,
+  IconHome,
 } from "@douyinfe/semi-icons";
 import { useRouter, usePathname } from "next/navigation";
 import "./style.css";
@@ -43,6 +44,10 @@ export async function getMenu(
       const menuArray: Array<MenuItem> = new Array<MenuItem>();
       const menuLinkMap: MenuLinkMap = {};
       body.data.forEach((menuData) => {
+        if (menuData.id === 1) {
+          return;
+        }
+        
         const menu: MenuItem = {
           itemKey: menuData.id.toString(),
           text: menuData.name,
@@ -54,7 +59,7 @@ export async function getMenu(
         //menuData.permission
 
         //递归处理子菜单
-        convertMenuNode(menu, menuLinkMap, menuData.children_menu);
+        convertMenuNode(menu, menuLinkMap, menuData.children);
 
         menuArray.push(menu);
         menuLinkMap[menuData.id.toString()] = menuData.url;
@@ -79,6 +84,7 @@ export async function getMenu(
 }
 
 const iconMap = {
+  IconHome: IconHome,
   IconUser: IconUser,
   IconUserGroup: IconUserGroup,
   IconLayers: IconLayers,
@@ -88,6 +94,8 @@ const iconMap = {
 
 function renderIcon(icon: string) {
   switch (icon) {
+    case "IconHome":
+      return <IconHome />;
     case "IconUser":
       return <IconUser />;
     case "IconUserGroup":
@@ -122,8 +130,8 @@ const convertMenuNode = (
       items: [],
     };
 
-    if (child.children_menu.length > 0) {
-      convertMenuNode(menu, menuLinkMap, child.children_menu);
+    if (child.children.length > 0) {
+      convertMenuNode(menu, menuLinkMap, child.children);
     }
 
     childrenMenu.push(menu);

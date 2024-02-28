@@ -1,16 +1,33 @@
 /** @type {import('next').NextConfig} */
 
-/**
- * 增加开发用配置，当访问/api/xx时，映射到后端localhost:8080/xxx
- */
-module.exports = {
+const nextConfig = {
   //代理重定向到后台服务
   async rewrites() {
     return {
-      fallback: [{
-        source: '/api/:path*',
-        destination: `http://localhost:8080/:path*`,
-      }, ],
-    }
+      fallback: [
+        {
+          source: "/api/system/user",
+          destination: `${process.env.BACKEND_URL}/system/user/`,
+        },
+        {
+          source: "/api/:path*",
+          destination: `${process.env.BACKEND_URL}/:path*`,
+        },
+      ],
+    };
   },
-}
+  images: {
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "img.shields.io",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
+};
+
+module.exports = nextConfig;

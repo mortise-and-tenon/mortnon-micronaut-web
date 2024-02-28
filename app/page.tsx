@@ -1,45 +1,57 @@
 "use client";
-import React from "react";
-import Image from "next/image";
-import { Layout, Menu, theme,MenuProps,Avatar  } from "antd";
-import { HomeOutlined, SettingOutlined,UserOutlined  } from '@ant-design/icons';
-import Link from "next/link";
-const { Header, Content } = Layout;
 
-const menuItems:MenuProps = [
-  {
-    key: 'dashboard',
-    label: (<Link href="/">首页</Link>),
-    icon: <HomeOutlined/>
-  },
-  {
-    key: 'sys',
-    label: (<Link href="/user">系统管理</Link>),
-    icon: <SettingOutlined/>
-  }
-]
+import { Flex, Spin } from "antd";
+
+import { getCookie } from "cookies-next";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import PuffLoader from "react-spinners/PuffLoader";
+
+import styles from "./page.module.css";
+import { displayModeIsDark } from "./_modules/func";
+
+//浅色
+const lightColor = "white";
+//深色
+const darkColor = "black";
+//主要颜色
+const color = "#1677ff";
 
 export default function Home() {
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+  const { push } = useRouter();
+
+  //是否深色模式
+  const [backgroundColor, setBackgroundColor] = useState(lightColor);
+
+  useEffect(() => {
+    const token = getCookie("JWT");
+    if (token === "") {
+      push("/login");
+    } else {
+      push("/home");
+    }
+
+    setBackgroundColor(displayModeIsDark() ? darkColor : lightColor);
+  }, []);
 
   return (
-    <Layout className="layout-full-screen">
-      <Header
-        className="main-header"
-      >
-        <Image src="/clover.png" alt="Logo" width={48} height={48} />
-        <Menu
-          mode="horizontal"
-          defaultSelectedKeys={["dashboard"]}
-          items={menuItems}
-          style={{ flex: 1, minWidth: 0 }}
-          theme="light"
-        />
-        <Avatar icon={<UserOutlined />} />
-      </Header>
-      <Content>Dashbord</Content>
-    </Layout>
+    <Flex
+      vertical
+      className={styles.bodyContent}
+      style={{ backgroundColor: backgroundColor }}
+      justify="center"
+      align="center"
+    >
+      <PuffLoader
+        color={color}
+        loading={true}
+        size={150}
+        aria-label="Loading"
+      />
+      <span style={{ color: color, marginTop: "16px" }}>
+        MorTnon，高质量的快速开发框架
+      </span>
+    </Flex>
   );
 }

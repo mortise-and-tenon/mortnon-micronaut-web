@@ -1,45 +1,87 @@
-# Mortnon Web
 
-## 简介
+# 若依 React Pro
 
-Mortnon 后端对应的前端项目，使用 Next.js + Antd 。
+> 实现效果截图
 
-同时在整个开发过程中，学习 React、Next.js 和 Antd。
+- 浅色模式
 
-## Roadmap
+1. 登录
 
-- 创建一个登录页面
-  - ~~设计一个用户名、密码输入框，并增加登录按钮~~
-  - ~~调整以上为表单~~
-  - 设置页面布局
-    - header：左上角展示 logo
-    - main：背景图
-    - ~~main：右侧为登录表单~~
-    - ~~footer：版权等信息~~
-  - ~~登录按钮点击，实际调用登录接口，完成登录~~
+![](https://images.bookhub.tech/ruoyi/login_light.png)
 
-- 登录与未登录的判断
-  - 未成功登录时，访问其他页面自动跳到登录页面
-  - 登录成功时，自动跳转到首页
+2. 首页
 
-- 创建一个页面Layout
-  - head：左上角 Logo，右上角个人中心
-  - aside：左侧，为菜单列表
-  - main： 右侧，页面内容
-  - footer：版权等
+![](https://images.bookhub.tech/ruoyi/home_light.png)
 
-- 创建一个简要的首页，以确认 Layout 生效
+3. 表单
 
-- 创建用户管理页面
-  - 设计一个用户管理列表页面
-    - 表头：下拉属性列表、值输入框、过滤按钮、删除按钮
-      - 下拉属性列表：定值可过滤属性值
-      - 值输入框，用于过滤
-      - 过滤按钮：实际调用查询接口，更新表体数据
-    - 表体
-      - 列表第一列：复选框
-      - 列表最后一列：编辑基本信息按钮，分配按钮
-    - 表尾
-      - 页码选择、分页值列表
-      - 页码选择，实际调用查询接口，更新表体数据
-      - 分页值选择后，实际调用查询接口，更新表体数据
+![](https://images.bookhub.tech/ruoyi/table_light.png)
+
+4. 统计
+
+![](https://images.bookhub.tech/ruoyi/statis_light.png)
+
+- 深色模式
+
+1. 登录
+
+![](https://images.bookhub.tech/ruoyi/login_dark.png)
+
+2. 首页
+
+![](https://images.bookhub.tech/ruoyi/home_dark.png)
+
+3. 表单
+
+![](https://images.bookhub.tech/ruoyi/table_dark.png)
+
+4. 统计
+
+![](https://images.bookhub.tech/ruoyi/statis_dark.png)
+
+## 项目说明
+
+![Static Badge](https://img.shields.io/badge/React-18.2.0-%236EB6FF) ![Static Badge](https://img.shields.io/badge/NextJS-14.1.0-%2349D49D) ![Static Badge](https://img.shields.io/badge/AntD-5.13.1-%23FFA94D) ![Static Badge](https://img.shields.io/badge/AntD%20ProComponets-2.6.48-%23E94F87)
+
+![Static Badge](https://img.shields.io/badge/%E8%8B%A5%E4%BE%9D-%E6%94%AF%E6%8C%81-green)
+![Static Badge](https://img.shields.io/badge/ESLint-PASS-green)
+
+本项目为 RuoYi 前后端分离版本的前端适配项目。原作者的 RuoYi 前端项目使用 Vue 开发，本项目使用 React 开发，并引入了 Antd 和 Antd ProComponents，具有更高的美观度。
+
+### 使用框架
+
+- [Next.js](https://nextjs.org/)：主体 React 框架
+- [Ant Design](https://ant-design.antgroup.com/index-cn)：页面组件
+- [Ant Design ProComponents](https://procomponents.ant.design/)：高级封装页面组件
+- [Font Awesome](https://fontawesome.com/)：图标库
+- [cookies-next](https://github.com/andreizanik/cookies-next)：cookies 操作
+- [jsencrypt](https://github.com/travist/jsencrypt)：加解密
+- [ReactQuill](https://github.com/zenoamaro/react-quill)：富文本编辑框组件
+- [React Spinner](https://www.davidhu.io/react-spinners/)：加载组件
+- [React Cron](https://recron.emptyui.com/)：Cron 表达式生成器组件
+- [react-countup](https://github.com/glennreyes/react-countup)：数字自动增长效果
+- [react-chartjs-2](https://react-chartjs-2.js.org/)：图表组件
+- [react-d3-speedometer](https://github.com/palerdot/react-d3-speedometer)：速度表盘组件
+
+## 项目初始化
+
+- 安装依赖
+
+```bash
+npm i
+```
+
+## 项目运行
+
+- 启动项目
+
+```bash
+npm run dev
+```
+
+- 访问 [http://localhost:3000](http://localhost:3000)
+
+## TODO
+
+- 表单构建页面
+- 代码生成页面

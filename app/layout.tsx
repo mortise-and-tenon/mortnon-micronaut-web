@@ -1,19 +1,26 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from "next";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
+import "./normalize.css";
+import "@fortawesome/fontawesome-svg-core/styles.css"; // import Font Awesome CSS
+import { config } from "@fortawesome/fontawesome-svg-core";
+config.autoAddCss = false; // Tell Font Awesome to skip adding the CSS automatically since it's being imported above
+
 
 export const metadata: Metadata = {
-  title: 'Mortnon Web',
-  description: 'Mortnon Web',
-}
+  title: "MorTnon 后台管理系统",
+  description: "MorTnon 后台管理系统",
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+          <AntdRegistry>{children}</AntdRegistry>
+      </body>
     </html>
-  )
+  );
 }

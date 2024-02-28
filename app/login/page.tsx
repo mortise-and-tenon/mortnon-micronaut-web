@@ -1,135 +1,326 @@
 "use client";
-import React, { useState } from "react";
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  LoginFormPage,
+  ProConfigProvider,
+  ProFormCheckbox,
+  ProFormText,
+} from "@ant-design/pro-components";
+import { Divider, message, Spin, theme, ConfigProvider } from "antd";
+import type { ConfigProviderProps } from "antd";
+import { setCookie, getCookie, deleteCookie } from "cookies-next";
+import { useRouter } from "next/navigation";
+
+import type { ProFormInstance } from "@ant-design/pro-components";
+
 import Image from "next/image";
+
+import { useEffect, useState, useRef } from "react";
+import { LoginReq } from "../_modules/definies";
 import {
-  EyeInvisibleOutlined,
-  EyeTwoTone,
-  UserOutlined,
-  LockOutlined,
-} from "@ant-design/icons";
-import {
-  Form,
-  Button,
-  Input,
-  Space,
-  Divider,
-  Row,
-  Col,
-  Layout,
-  Flex,
-  Alert,
-  Spin
-} from "antd";
+  encrypt,
+  decrypt,
+  displayModeIsDark,
+  watchDarkModeChange,
+} from "../_modules/func";
+import { headers } from "@/node_modules/next/headers";
 
-const { Header, Footer, Sider, Content } = Layout;
+type Captcha = {
+  image: string;
+  key: string;
+};
 
-import { useRouter } from "@/node_modules/next/navigation";
+//cookies 记住的用户名 key
+const cookie_username_key = "mortnon_username";
+//cookies 记住的密码 key
+const cookie_password_key = "mortnon_password";
 
-import "./style.css";
+//浅色背景图
+const backgroudLight = "/bg_light.jpg";
+//深色前景图
+const backgroundDark = "/bg_dark.jpg";
 
 export default function Login() {
+  //验证码数据
+  const [captcha, setCaptcha] = useState({} as Captcha);
+  //是否展示验证码框
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  //验证码加载状态
+  const [isLoadingImg, setIsLoadingImg] = useState(true);
+
+  //获取验证码
+  const getCaptcha = async () => {
+    try {
+      const response = await fetch("/api/captcha");
+      if (response.ok) {
+        const body = await response.json();
+
+        setShowCaptcha(body.data.enabled);
+
+        if (body.data.enabled) {
+          const captchaData: Captcha = {
+            image: body.data.image,
+            key: body.data.key,
+          };
+
+          setCaptcha(captchaData);
+          setIsLoadingImg(false);
+        }
+      } else {
+      }
+    } catch (error) {
+    } finally {
+    }
+  };
+
+  //深色模式
+  const [isDark, setIsDark] = useState(false);
+  //背景图片
+  const [background, setBackground] = useState(backgroudLight);
+
+  useEffect(() => {
+    getCaptcha();
+    readUserNamePassword();
+    setIsDark(displayModeIsDark());
+    setBackground(displayModeIsDark() ? backgroundDark : backgroudLight);
+    const unsubscribe = watchDarkModeChange((matches: boolean) => {
+      setIsDark(matches);
+      setBackground(matches ? backgroundDark : backgroudLight);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const router = useRouter();
 
-  //是否等待加载中
-  const [isLoading, setIsLoading] = useState(false);
+  //提交登录
+  const userLogin = async (values: any) => {
+    const loginData: LoginReq = {
+      username: values.username,
+      password: values.password,
+      code: values.code,
+      verify_token: captcha.key,
+    };
 
-  const [loginFailMsg, setLoginFailMsg] = useState("");
-  const [loginFail, setLoginFail] = useState(false);
+    //是否记住密码
+    const autoLogin = values.autoLogin;
 
-  //表单提交执行逻辑
-  const onFinish = async (values) => {
-    setIsLoading(true);
-
-    const { username, password } = values;
-    const reqData = { username, password };
     try {
       const response = await fetch("/api/login/password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(reqData),
-        'credentials': 'include'
+        body: JSON.stringify(loginData),
+        credentials: "include",
       });
+
+      //获得响应
       if (response.ok) {
         const data = await response.json();
-        console.log("success:", data);
-        router.push("/");
+
+        //登录成功
+        if (data.success) {
+          message.success("登录成功");
+          //记住密码
+          if (autoLogin) {
+            rememberUserNamePassword(values.username, values.password);
+          } else {
+            removeUserNamePassword();
+          }
+
+          router.push("/");
+        } else {
+          message.error(data.message);
+
+          //异常，自动刷新验证码
+          getCaptcha();
+        }
       } else {
-        setLoginFail(true);
         const data = await response.json();
-        //TODO:前端有一个错误码和国际化文字的对应关系，用错误码对应的文字显示
-        setLoginFailMsg(data.message);
+
+        message.error(data.message);
       }
     } catch (error) {
-      setLoginFail(true);
-      setLoginFailMsg("登录发生异常，请重试");
+      console.log("error:", error);
+      message.error("登录发生异常，请重试");
     } finally {
-      setIsLoading(false);
     }
   };
 
-  //登录按钮绑定回车
-  const handleSubmit = (event) => {
-    if (event.key === "Enter") {
-      // 表单提交
-      event.target.form.submit();
+  //记住用户名密码到cookie
+  const rememberUserNamePassword = (username: string, password: string) => {
+    setCookie(cookie_username_key, encrypt(username));
+    setCookie(cookie_password_key, encrypt(password));
+  };
+
+  //移除cookie中的用户名和密码
+  const removeUserNamePassword = () => {
+    deleteCookie(cookie_username_key);
+    deleteCookie(cookie_password_key);
+  };
+
+  const loginFormRef = useRef<ProFormInstance>();
+
+  //读取cookie中用户名密码，并填写到表单中
+  const readUserNamePassword = () => {
+    const username = getCookie(cookie_username_key);
+    const password = getCookie(cookie_password_key);
+
+    if (username !== undefined && password !== undefined) {
+      if (loginFormRef) {
+        loginFormRef.current?.setFieldsValue({
+          username: decrypt(username),
+          password: decrypt(password),
+          autoLogin: true,
+        });
+      }
     }
   };
+
+  const { token } = theme.useToken();
 
   return (
-    <Layout className="layout-almost-full-screen background-style">
-      <Header className="header-style">
-        <Image src="/clover.png" alt="Logo" width={50} height={50}/>
-        <h1 className="title-style">Monrton 管理系统</h1>
-      </Header>
-      <Content className="contentStyle">
-        <div className="formSytle">
-          <Divider>登录</Divider>
-          {loginFail && (
-            <Alert
-              message={loginFailMsg}
-              type="error"
-              className="alert-style"
+    <ProConfigProvider dark={isDark}>
+      <div
+        style={{
+          backgroundColor: "white",
+          height: "100vh",
+        }}
+      >
+        <LoginFormPage
+          formRef={loginFormRef}
+          backgroundImageUrl={background}
+          logo="./mortnon.svg"
+          title={(<span>MorTnon 后台管理系统</span>) as any}
+          containerStyle={{
+            backgroundColor: "rgba(0,0,0,0)",
+            backdropFilter: "blur(4px)",
+          }}
+          subTitle={
+            <span style={{ color: "rgba(255,255,255,1)" }}>
+              MorTnon，高质量的快速开发框架
+            </span>
+          }
+          actions={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <p style={{ color: "rgba(255,255,255,.6)" }}>
+                ©{new Date().getFullYear()} Mortnon.
+              </p>
+            </div>
+          }
+          onFinish={userLogin}
+        >
+          <Divider>账号密码登录</Divider>
+          <>
+            <ProFormText
+              name="username"
+              fieldProps={{
+                size: "large",
+                prefix: (
+                  <UserOutlined
+                    style={{
+                      color: token.colorText,
+                    }}
+                    className={"prefixIcon"}
+                  />
+                ),
+              }}
+              placeholder={"用户名"}
+              rules={[
+                {
+                  required: true,
+                  message: "用户名不能为空",
+                },
+              ]}
             />
-          )}
-          <Spin spinning={isLoading}>
-            <Form name="login" className="login-form" onFinish={onFinish}>
-              <Form.Item
-                name="username"
-                rules={[{ required: true, message: "请输入用户名" }]}
+            <ProFormText.Password
+              name="password"
+              fieldProps={{
+                size: "large",
+                prefix: (
+                  <LockOutlined
+                    style={{
+                      color: token.colorText,
+                    }}
+                    className={"prefixIcon"}
+                  />
+                ),
+              }}
+              placeholder={"密码"}
+              rules={[
+                {
+                  required: true,
+                  message: "密码不能为空",
+                },
+              ]}
+            />
+            {showCaptcha && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                }}
               >
-                <Input
-                  prefix={<UserOutlined className="site-form-item-icon" />}
-                  placeholder="用户名"
-                 
+                <ProFormText
+                  name="code"
+                  fieldProps={{
+                    size: "large",
+                    prefix: (
+                      <UserOutlined
+                        style={{
+                          color: token.colorText,
+                        }}
+                        className={"prefixIcon"}
+                      />
+                    ),
+                  }}
+                  placeholder={"验证码"}
+                  rules={[
+                    {
+                      required: true,
+                      message: "验证码不能为空",
+                    },
+                  ]}
                 />
-              </Form.Item>
-              <Form.Item
-                name="password"
-                rules={[{ required: true, message: "请输入密码" }]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined className="site-form-item-icon" />}
-                  placeholder="密码"
-             
-                />
-              </Form.Item>
-              <Form.Item className="loginBtnSytle">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  className="login-form-button"
-                  onKeyDown={handleSubmit}
-                >
-                  登录
-                </Button>
-              </Form.Item>
-            </Form>
-          </Spin>
-        </div>
-      </Content>
-      <Footer className="footer-style">©2023 Mortnon.</Footer>
-    </Layout>
+
+                <div style={{ margin: "0 0 0 8px" }}>
+                  <Spin spinning={isLoadingImg}>
+                    {captcha.image === undefined ? (
+                      <div style={{ width: 80, height: 40 }}></div>
+                    ) : (
+                      <Image
+                        src={captcha.image}
+                        width={80}
+                        height={40}
+                        alt="captcha"
+                        onClick={getCaptcha}
+                      />
+                    )}
+                  </Spin>
+                </div>
+              </div>
+            )}
+          </>
+          <div
+            style={{
+              marginBlockEnd: 24,
+            }}
+          >
+            <ProFormCheckbox noStyle name="autoLogin">
+              记住密码
+            </ProFormCheckbox>
+          </div>
+        </LoginFormPage>
+      </div>
+    </ProConfigProvider>
   );
 }

@@ -253,10 +253,6 @@ export default function RootLayout({
     const element = document.documentElement;
     if (element.requestFullscreen) {
       element.requestFullscreen();
-    } else if (element.mozRequestFullScreen) {
-      element.mozRequestFullScreen();
-    } else if (element.webkitRequestFullScreen) {
-      element.webkitRequestFullScreen();
     }
 
     setIsFullscreen(true);
@@ -266,10 +262,6 @@ export default function RootLayout({
   const closeFullscreen = () => {
     if (document.exitFullscreen) {
       document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullScreen) {
-      document.webkitExitFullScreen();
     }
 
     setIsFullscreen(false);
@@ -377,7 +369,7 @@ export default function RootLayout({
                 <SearchOutlined
                   style={{
                     color: "var(--ant-primary-color)",
-                    marginRight: showSearch && 8,
+                    marginRight: showSearch ? 8 : 0,
                     height: "100%",
                   }}
                   onClick={() => setShowSearch(!showSearch)}
@@ -432,7 +424,7 @@ export default function RootLayout({
               <FullscreenExitOutlined
                 style={{
                   color: "var(--ant-primary-color)",
-                  marginRight: showSearch && 8,
+                  marginRight: showSearch ? 8 : 0,
                   height: "100%",
                 }}
                 onClick={closeFullscreen}
@@ -441,7 +433,7 @@ export default function RootLayout({
               <FullscreenOutlined
                 style={{
                   color: "var(--ant-primary-color)",
-                  marginRight: showSearch && 8,
+                  marginRight: showSearch ? 8 : 0,
                   height: "100%",
                 }}
                 onClick={openFullscreen}

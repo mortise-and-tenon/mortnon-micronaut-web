@@ -40,22 +40,14 @@ export async function fetchApi(url: string, push: any, options?: RequestInit) {
 export async function fetchFile(
   url: string,
   push: any,
-  options: RequestInit,
   fileName: string
 ) {
-  const token = getCookie("token");
-  const authHeader = {
-    Authorization: "Bearer " + token,
-  };
 
   const requestHeader = {
-    ...options?.headers,
-    ...authHeader,
     credentials: "include",
   };
 
   const requestOptions = {
-    ...options,
     headers: requestHeader,
   };
 

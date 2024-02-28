@@ -322,27 +322,17 @@ export default function OperLog() {
   //导出日志文件
   const exportTable = async () => {
     if (formRef.current) {
-      const formData = new FormData();
-
-      const data = {
+      const queryData = {
         pageNum: page,
         pageSize: pageSize,
         ...formRef.current.getFieldsValue(),
       };
 
-      Object.keys(data).forEach((key) => {
-        if (data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
+      const queryParams = new URLSearchParams(queryData);
 
       await fetchFile(
-        "/api/monitor/operlog/export",
+        `/api/logs/export${queryParams}`,
         push,
-        {
-          method: "POST",
-          body: formData,
-        },
         `operlog_${new Date().getTime()}.xlsx`
       );
     }

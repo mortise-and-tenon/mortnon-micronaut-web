@@ -421,23 +421,27 @@ export default function RootLayout({
               </Tooltip>
             </Link>,
             isFullscreen ? (
-              <FullscreenExitOutlined
-                style={{
-                  color: "var(--ant-primary-color)",
-                  marginRight: showSearch ? 8 : 0,
-                  height: "100%",
-                }}
-                onClick={closeFullscreen}
-              />
+              <Tooltip title="退出全屏">
+                <FullscreenExitOutlined
+                  style={{
+                    color: "var(--ant-primary-color)",
+                    marginRight: showSearch ? 8 : 0,
+                    height: "100%",
+                  }}
+                  onClick={closeFullscreen}
+                />
+              </Tooltip>
             ) : (
-              <FullscreenOutlined
-                style={{
-                  color: "var(--ant-primary-color)",
-                  marginRight: showSearch ? 8 : 0,
-                  height: "100%",
-                }}
-                onClick={openFullscreen}
-              />
+              <Tooltip title="全屏显示">
+                <FullscreenOutlined
+                  style={{
+                    color: "var(--ant-primary-color)",
+                    marginRight: showSearch ? 8 : 0,
+                    height: "100%",
+                  }}
+                  onClick={openFullscreen}
+                />
+              </Tooltip>
             ),
           ];
         }}

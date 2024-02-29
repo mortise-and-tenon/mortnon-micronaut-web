@@ -321,19 +321,25 @@ export default function OperLog() {
 
   //导出日志文件
   const exportTable = async () => {
+    message.loading("开始导出");
     if (formRef.current) {
+      const queryFields = Object.fromEntries(
+        Object.entries(formRef.current.getFieldsValue()).filter(
+          ([, value]) => value !== undefined
+        )
+      );
       const queryData = {
-        pageNum: page,
-        pageSize: pageSize,
-        ...formRef.current.getFieldsValue(),
+        pageNum: page.toString(),
+        pageSize: pageSize.toString(),
+        ...queryFields,
       };
 
       const queryParams = new URLSearchParams(queryData);
 
       await fetchFile(
-        `/api/logs/export${queryParams}`,
+        `/api/logs/export?${queryParams}`,
         push,
-        `operlog_${new Date().getTime()}.xlsx`
+        `操作日志_${new Date().getTime()}.xlsx`
       );
     }
   };

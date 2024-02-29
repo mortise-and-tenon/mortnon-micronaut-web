@@ -200,90 +200,12 @@ export default function OperLog() {
     return body;
   };
 
-  //删除按钮是否可用，选中行时才可用
-  const [rowCanDelete, setRowCanDelete] = useState(false);
-
   //选中行操作
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const rowSelection = {
     onChange: (newSelectedRowKeys: React.Key[]) => {
       setSelectedRowKeys(newSelectedRowKeys);
-      setRowCanDelete(newSelectedRowKeys && newSelectedRowKeys.length > 0);
     },
-  };
-
-  //点击删除按钮
-  const onClickDeleteRow = () => {
-    Modal.confirm({
-      title: "系统提示",
-      icon: <ExclamationCircleFilled />,
-      content: `确定删除日志编号为“${selectedRowKeys.join(",")}”的数据项？`,
-      onOk() {
-        executeDeleteRow();
-      },
-      onCancel() {},
-    });
-  };
-
-  //点击清空按钮
-  const onClickClear = () => {
-    Modal.confirm({
-      title: "系统提示",
-      icon: <ExclamationCircleFilled />,
-      content: "是否确认清空所有操作日志数据项？",
-      onOk() {
-        executeClear();
-      },
-      onCancel() {},
-    });
-  };
-
-  //确定删除选中的日志数据
-  const executeDeleteRow = async () => {
-    const body = await fetchApi(
-      `/api/monitor/operlog/${selectedRowKeys.join(",")}`,
-      push,
-      {
-        method: "DELETE",
-      }
-    );
-    if (body !== undefined) {
-      if (body.code == 200) {
-        message.success("删除成功");
-
-        //删除按钮变回不可点击
-        setRowCanDelete(false);
-        //选中的数据恢复为空
-        setSelectedRowKeys([]);
-        //刷新列表
-        if (actionRef.current) {
-          actionRef.current.reload();
-        }
-      } else {
-        message.error(body.msg);
-      }
-    }
-  };
-
-  //确定清空日志数据
-  const executeClear = async () => {
-    const body = await fetchApi("/api/monitor/operlog/clean", push, {
-      method: "DELETE",
-    });
-
-    if (body !== undefined) {
-      if (body.code == 200) {
-        message.success("清空成功");
-        //选中的数据恢复为空
-        setSelectedRowKeys([]);
-        //刷新列表
-        if (actionRef.current) {
-          actionRef.current.reload();
-        }
-      } else {
-        message.error(body.msg);
-      }
-    }
   };
 
   //控制是否展示行详情模态框
@@ -311,8 +233,8 @@ export default function OperLog() {
 
   //当前页数和每页条数
   const [page, setPage] = useState(1);
-  const defualtPageSize = 10;
-  const [pageSize, setPageSize] = useState(defualtPageSize);
+  const defaultPageSize = 10;
+  const [pageSize, setPageSize] = useState(defaultPageSize);
 
   const pageChange = (page: number, pageSize: number) => {
     setPage(page);
@@ -356,10 +278,8 @@ export default function OperLog() {
         columns={columns}
         request={async (params: any, sorter: any, filter: any) => {
           // 表单搜索项会从 params 传入，传递给后端接口。
-          console.log(params, sorter, filter);
           const body = await getLog(params, sorter, filter);
           if (body !== undefined) {
-            console.log("Logs：", body.data);
             return Promise.resolve({
               data: body.data.content,
               success: true,
@@ -372,7 +292,7 @@ export default function OperLog() {
           });
         }}
         pagination={{
-          defaultPageSize: defualtPageSize,
+          defaultPageSize: defaultPageSize,
           showQuickJumper: true,
           showSizeChanger: true,
           onChange: pageChange,

@@ -106,7 +106,7 @@ export default function Project() {
       order: 1,
     },
     {
-      title: "描述",
+      title: "备注",
       dataIndex: "description",
       ellipsis: true,
       search: false,
@@ -184,13 +184,8 @@ export default function Project() {
 
   const queryTableData = async (params: any, sorter: any, filter: any) => {
     const searchParams = {
-      page: params.current - 1,
-      size: params.pageSize,
       ...params,
     };
-
-    delete searchParams.current;
-    delete searchParams.pageSize;
 
     const queryParams = new URLSearchParams(searchParams);
 
@@ -205,8 +200,11 @@ export default function Project() {
 
     const body = await fetchApi(`${queryAPI}?${queryParams}`, push);
 
-    parseChild(body.data);
-    const dataArray = [body.data];
+    const dataArray = body.data;
+
+    dataArray.forEach((item: any) => {
+      parseChild(item);
+    });
 
     const newExpandedKeys: any[] = [];
     const render = (treeDatas: any[]) => {
@@ -314,16 +312,14 @@ export default function Project() {
       const body = await fetchApi(`${queryDetailAPI}/${id}`, push);
 
       if (body !== undefined) {
-        if (body.code == 200) {
+        if (body.success) {
           modifyFormRef?.current?.setFieldsValue({
             //需要加载到修改表单中的数据
-            parentId: body.data.parentId,
-            deptName: body.data.deptName,
-            orderNum: body.data.orderNum,
-            leader: body.data.leader,
-            phone: body.data.phone,
-            email: body.data.email,
+            parent_id: body.data.parent_id,
+            name: body.data.name,
+            order: body.data.order,
             status: body.data.status,
+            description: body.data.description,
           });
         }
       }
@@ -343,7 +339,7 @@ export default function Project() {
     });
 
     if (body !== undefined) {
-      if (body.code == 200) {
+      if (body.success) {
         message.success(body.msg);
         //刷新列表
         if (actionTableRef.current) {
@@ -352,7 +348,7 @@ export default function Project() {
         setIsShowModifyDataModal(false);
         return true;
       }
-      message.error(body.msg);
+      message.error(body.message);
       return false;
     }
   };
@@ -395,8 +391,11 @@ export default function Project() {
   const getDeptList = async () => {
     const body = await fetchApi(queryAPI, push);
     if (body !== undefined) {
-      parseChild(body.data);
-      return [body.data];
+      body.data.forEach((item: any) => {
+        parseChild(item);
+      });
+
+      return body.data;
     }
   };
 
@@ -405,7 +404,9 @@ export default function Project() {
     Modal.confirm({
       title: "系统提示",
       icon: <ExclamationCircleFilled />,
-      content: `确定删除部门名称为“${record.name}”的数据项？`,
+      content: `确定删除部门名称为“${record.name}”${
+        record.children?.length > 0 ? "及子部门" : ""
+      }的数据项？`,
       onOk() {
         executeDeleteRow(record.id);
       },
@@ -444,7 +445,6 @@ export default function Project() {
         request={async (params: any, sorter: any, filter: any) => {
           // 表单搜索项会从 params 传入，传递给后端接口。
           const data = await queryTableData(params, sorter, filter);
-          console.log("body:", data);
           if (data !== undefined) {
             return Promise.resolve({
               data: data,
@@ -631,7 +631,7 @@ export default function Project() {
             fieldProps={{ precision: 0 }}
             width="md"
             name="order"
-            initialValue="0"
+            initialValue="1"
             label="排序"
             placeholder="请输入排序"
             rules={[{ required: true, message: "请输入排序" }]}

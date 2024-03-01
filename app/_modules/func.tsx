@@ -2,14 +2,8 @@ import { getCookie } from "cookies-next";
 import JSEncrypt from "jsencrypt";
 
 export async function fetchApi(url: string, push: any, options?: RequestInit) {
-  const token = getCookie("token");
-  const authHeader = {
-    Authorization: "Bearer " + token,
-  };
-
   const requestHeader = {
     ...options?.headers,
-    ...authHeader,
     credentials: "include",
   };
 

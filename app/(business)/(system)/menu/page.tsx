@@ -67,6 +67,9 @@ export default function Menu() {
       title: "图标",
       dataIndex: "icon",
       search: false,
+      render: (text, record) => {
+        return IconMap[record.icon];
+      },
     },
     {
       title: "排序",
@@ -86,7 +89,7 @@ export default function Menu() {
       },
       dataIndex: "status",
       valueType: "select",
-      render: (_, record) => {
+      render: (text, record) => {
         return (
           <Space>
             <Tag
@@ -99,7 +102,7 @@ export default function Menu() {
                 )
               }
             >
-              {_}
+              {text}
             </Tag>
           </Space>
         );

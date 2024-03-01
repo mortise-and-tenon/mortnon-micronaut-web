@@ -115,6 +115,7 @@ export default function Project() {
       title: "创建时间",
       dataIndex: "time",
       valueType: "dateTime",
+      ellipsis: true,
       search: false,
     },
     {

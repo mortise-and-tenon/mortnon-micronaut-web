@@ -271,7 +271,7 @@ export default function RootLayout({
     <ProConfigProvider dark={isDark}>
       <ProLayout
         title="MorTnon 后台管理系统"
-        logo="./mortnon.svg"
+        logo="/mortnon.svg"
         menu={{
           request: getRoutes,
         }}

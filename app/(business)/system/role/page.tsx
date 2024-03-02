@@ -2,73 +2,42 @@
 
 import { fetchApi, fetchFile } from "@/app/_modules/func";
 import {
-  CaretDownOutlined,
-  CheckOutlined,
-  CloseOutlined,
   DeleteOutlined,
   ExclamationCircleFilled,
-  EyeOutlined,
   PlusOutlined,
   ReloadOutlined,
-  SearchOutlined,
-  KeyOutlined,
-  LoadingOutlined,
-  CloudUploadOutlined,
-  FileAddOutlined,
+  CaretDownOutlined,
 } from "@ant-design/icons";
 import type {
+  ActionType,
   ProColumns,
   ProFormInstance,
-  ActionType,
 } from "@ant-design/pro-components";
 import {
   ModalForm,
   PageContainer,
-  ProCard,
   ProForm,
   ProFormRadio,
-  ProFormSelect,
   ProFormText,
   ProFormTextArea,
   ProFormTreeSelect,
   ProTable,
-  ProFormDigit,
 } from "@ant-design/pro-components";
-import type { TreeDataNode, MenuProps, UploadProps, GetProp } from "antd";
-import {
-  Button,
-  Col,
-  Flex,
-  Input,
-  message,
-  Modal,
-  Row,
-  Space,
-  Spin,
-  Switch,
-  Tree,
-  Dropdown,
-  Form,
-  Upload,
-  Typography,
-  Checkbox,
-  Tag,
-} from "antd";
+import { Button, message, Modal, Space, Tag, Dropdown } from "antd";
 import { useRouter } from "next/navigation";
 
 import {
+  faCheck,
   faDownload,
   faPenToSquare,
   faToggleOff,
   faToggleOn,
-  faUpload,
-  faUsers,
-  faCheck,
   faXmark,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 //查询表格数据API
 const queryAPI = "/api/roles";
@@ -106,12 +75,14 @@ export default function Role() {
       title: "标识值",
       dataIndex: "identifier",
       ellipsis: true,
+      width: 128,
       order: 2,
     },
     {
       title: "状态",
       dataIndex: "status",
       valueType: "select",
+      width: 96,
       render: (_, record) => {
         return (
           <Space>
@@ -179,6 +150,29 @@ export default function Role() {
             >
               删除
             </Button>,
+            <Dropdown
+              key="moreDrop"
+              menu={{
+                items: [
+                  {
+                    key: "assignment",
+                    label: (
+                      <a onClick={() => push(`/system/role/auth/${record.id}`)}>
+                        分配用户
+                      </a>
+                    ),
+                    icon: <FontAwesomeIcon icon={faUsers} />,
+                  },
+                ],
+              }}
+            >
+              <a onClick={(e) => e.preventDefault()}>
+                <Space>
+                  更多
+                  <CaretDownOutlined />
+                </Space>
+              </a>
+            </Dropdown>,
           ];
       },
     },
@@ -408,9 +402,9 @@ export default function Role() {
     },
 
     //复选框的额外禁用判断
-    // getCheckboxProps: (record) => ({
-    //   disabled: record.userId == 1,
-    // }),
+    getCheckboxProps: (record: any) => ({
+      disabled: record.id == 1,
+    }),
   };
 
   //搜索栏显示状态
@@ -531,7 +525,7 @@ export default function Role() {
                     treeCheckable: true,
                     treeNodeFilterProp: "label",
                     fieldNames: {
-                      label: "description",
+                      label: "name",
                       value: "id",
                     },
                   }}
@@ -617,7 +611,7 @@ export default function Role() {
                     treeCheckable: true,
                     treeNodeFilterProp: "label",
                     fieldNames: {
-                      label: "description",
+                      label: "name",
                       value: "id",
                     },
                   }}
@@ -655,14 +649,6 @@ export default function Role() {
               onClick={() => onClickDeleteRow()}
             >
               删除
-            </Button>,
-            <Button
-              key="export"
-              type="primary"
-              icon={<FontAwesomeIcon icon={faDownload} />}
-              onClick={exportTable}
-            >
-              导出
             </Button>,
           ],
           settings: [

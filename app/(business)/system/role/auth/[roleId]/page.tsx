@@ -33,7 +33,7 @@ export type OptionType = {
   value: string | number;
 };
 
-export default function RoleAuth({ params }: { params: { roleId: string } }) {
+export default function RoleAuth({ params }: { params: { roleId: number } }) {
   const { push } = useRouter();
 
   const roleId = params.roleId;
@@ -43,11 +43,13 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
     {
       title: "用户名称",
       dataIndex: "user_name",
+      sorter: true,
       order: 5,
     },
     {
       title: "用户昵称",
       dataIndex: "nick_name",
+      sorter: true,
       order: 4,
     },
     {
@@ -110,9 +112,32 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
       },
     },
     {
+      title: "所属组织",
+      key: "project",
+      search: false,
+      render: (text, record) => {
+        if (record.project_roles.length > 0) {
+          return record.project_roles[0].project_name ?? "-";
+        }
+        return "-";
+      },
+    },
+    {
+      title: "角色",
+      key: "role",
+      search: false,
+      render: (text, record) => {
+        if (record.project_roles.length > 0) {
+          return record.project_roles[0].role_name;
+        }
+        return "-";
+      },
+    },
+    {
       title: "创建时间",
       dataIndex: "gmt_create",
       valueType: "dateTime",
+      sorter: true,
       search: false,
     },
     {
@@ -141,11 +166,13 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
     {
       title: "用户名称",
       dataIndex: "user_name",
+      sorter: true,
       order: 5,
     },
     {
       title: "用户昵称",
       dataIndex: "nick_name",
+      sorter: true,
       order: 4,
     },
     {
@@ -208,9 +235,21 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
       },
     },
     {
+      title: "所属组织",
+      key: "project",
+      search: false,
+      render: (text, record) => {
+        if (record.project_roles.length > 0) {
+          return record.project_roles[0].project_name ?? "-";
+        }
+        return "-";
+      },
+    },
+    {
       title: "创建时间",
       dataIndex: "gmt_create",
       valueType: "dateTime",
+      sorter: true,
       search: false,
     },
   ];
@@ -247,8 +286,10 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
   //查询角色未授权数据
   const getRoleUnallocate = async (params: any, sorter: any, filter: any) => {
     const searchParams = {
+      role_id: roleId,
       page: params.current - 1,
       size: params.pageSize,
+      unassignment: true,
       ...params,
     };
 
@@ -266,7 +307,7 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
       }
     });
 
-    const body = await fetchApi(`/api/unassignment?${queryParams}`, push);
+    const body = await fetchApi(`/api/assignment?${queryParams}`, push);
 
     if (body !== undefined) {
       return body;
@@ -320,9 +361,13 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
 
   //执行取消用户角色授权
   const executeRemoveRoleAuth = async (userId: any) => {
-    const body = await fetchApi(`/api/assignment/user/${userId}/role/${roleId}`, push, {
-      method: "DELETE",
-    });
+    const body = await fetchApi(
+      `/api/assignment/user/${userId}/role/${roleId}`,
+      push,
+      {
+        method: "DELETE",
+      }
+    );
 
     if (body !== undefined) {
       if (body.success) {
@@ -373,17 +418,17 @@ export default function RoleAuth({ params }: { params: { roleId: string } }) {
   //确认分配新的用户
   const confirmAddUnallocate = async () => {
     const data = {
-      roleId: roleId,
-      userIds: selectedRowKeysUnallocate.join(","),
+      role_id: roleId,
+      user_id_list: selectedRowKeysUnallocate,
     };
 
-    const body = await fetchApi(
-      `/api/assignment?${new URLSearchParams(data)}`,
-      push,
-      {
-        method: "PUT",
-      }
-    );
+    const body = await fetchApi(`/api/assignment?`, push, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
     if (body !== undefined) {
       if (body.success) {

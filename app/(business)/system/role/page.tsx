@@ -201,9 +201,7 @@ export default function Role() {
     });
 
     const body = await fetchApi(`${queryAPI}?${queryParams}`, push);
-
-    body.data.content.sort((a: any, b: any) => a.id - b.id);
-
+    
     return body;
   };
 
@@ -255,7 +253,7 @@ export default function Role() {
 
   //查询并加载待修改数据的详细信息
   const queryRowData = async (record?: any) => {
-    const id = record !== undefined ? record.id : selectedRow.id;
+    const id = record.id;
 
     operatRowData["id"] = id;
 
@@ -310,13 +308,12 @@ export default function Role() {
 
   //点击删除按钮，展示删除确认框
   const onClickDeleteRow = (record?: any) => {
-    const id = record != undefined ? record.id : selectedRowKeys.join(",");
     Modal.confirm({
       title: "系统提示",
       icon: <ExclamationCircleFilled />,
-      content: `确定删除角色编号为“${id}”的数据项？`,
+      content: `确定删除角色名称为“${record.name}”的数据项？`,
       onOk() {
-        executeDeleteRow(id);
+        executeDeleteRow(record.id);
       },
       onCancel() {},
     });
@@ -330,13 +327,6 @@ export default function Role() {
     if (body !== undefined) {
       if (body.success) {
         message.success("删除成功");
-
-        //修改按钮变回不可点击
-        setRowCanModify(false);
-        //删除按钮变回不可点击
-        setRowCanDelete(false);
-        //选中行数据重置为空
-        setSelectedRowKeys([]);
         //刷新列表
         if (actionTableRef.current) {
           actionTableRef.current.reload();
@@ -345,66 +335,6 @@ export default function Role() {
         message.error(body.message);
       }
     }
-  };
-
-  //4.导出
-
-  //导出表格数据
-  const exportTable = async () => {
-    message.loading("开始导出");
-    if (formRef.current) {
-      const queryFields = Object.fromEntries(
-        Object.entries(formRef.current.getFieldsValue()).filter(
-          ([, value]) => value !== undefined
-        )
-      );
-      const queryData = {
-        pageNum: page.toString(),
-        pageSize: pageSize.toString(),
-        ...queryFields,
-      };
-
-      const queryParams = new URLSearchParams(queryData);
-
-      await fetchFile(
-        `exportAPI?${queryParams}`,
-        push,
-        `${exportFilePrefix}_${new Date().getTime()}.xlsx`
-      );
-    }
-  };
-
-  //5.选择行
-
-  //选中行操作
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [selectedRow, setSelectedRow] = useState(undefined as any);
-
-  //修改按钮是否可用，选中行时才可用
-  const [rowCanModify, setRowCanModify] = useState(false);
-
-  //删除按钮是否可用，选中行时才可用
-  const [rowCanDelete, setRowCanDelete] = useState(false);
-
-  //ProTable rowSelection
-  const rowSelection = {
-    onChange: (newSelectedRowKeys: React.Key[], selectedRows: any[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
-      setRowCanDelete(newSelectedRowKeys && newSelectedRowKeys.length > 0);
-
-      if (newSelectedRowKeys && newSelectedRowKeys.length == 1) {
-        setSelectedRow(selectedRows[0]);
-        setRowCanModify(true);
-      } else {
-        setRowCanModify(false);
-        setSelectedRow(undefined);
-      }
-    },
-
-    //复选框的额外禁用判断
-    getCheckboxProps: (record: any) => ({
-      disabled: record.id == 1,
-    }),
   };
 
   //搜索栏显示状态
@@ -439,10 +369,6 @@ export default function Role() {
       <ProTable
         formRef={searchTableFormRef}
         rowKey="id"
-        rowSelection={{
-          selectedRowKeys,
-          ...rowSelection,
-        }}
         columns={columns}
         request={async (params: any, sorter: any, filter: any) => {
           // 表单搜索项会从 params 传入，传递给后端接口。
@@ -558,15 +484,6 @@ export default function Role() {
               key="modifymodal"
               title="修改角色"
               formRef={modifyFormRef}
-              trigger={
-                <Button
-                  icon={<FontAwesomeIcon icon={faPenToSquare} />}
-                  disabled={!rowCanModify}
-                  onClick={() => onClickShowRowModifyModal()}
-                >
-                  修改
-                </Button>
-              }
               open={isShowModifyDataModal}
               autoFocusFirstInput
               modalProps={{
@@ -640,16 +557,6 @@ export default function Role() {
                 placeholder="请输入内容"
               />
             </ModalForm>,
-
-            <Button
-              key="danger"
-              danger
-              icon={<DeleteOutlined />}
-              disabled={!rowCanDelete}
-              onClick={() => onClickDeleteRow()}
-            >
-              删除
-            </Button>,
           ],
           settings: [
             {

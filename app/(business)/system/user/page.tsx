@@ -80,9 +80,8 @@ export default function User() {
   const [defaultPassword, setDefaultPassword] = useState("");
 
   useEffect(() => {
-    queryDefaultPassword();
-    queryPostion();
     queryOrgTree();
+    queryRole();
   }, []);
 
   //控制行的状态值的恢复
@@ -93,8 +92,9 @@ export default function User() {
   //表格列定义
   const columns: ProColumns[] = [
     {
-      title: "用户编号",
-      dataIndex: "userId",
+      title: "编号",
+      dataIndex: "id",
+      width: 48,
       search: false,
     },
     {
@@ -102,31 +102,39 @@ export default function User() {
       fieldProps: {
         placeholder: "请输入用户名称",
       },
-      dataIndex: "userName",
+      dataIndex: "user_name",
+      ellipsis: true,
+      sorter: true,
+      order: 5,
+    },
+    {
+      title: "用户昵称",
+      fieldProps: {
+        placeholder: "请输入用户昵称",
+      },
+      dataIndex: "nick_name",
       ellipsis: true,
       sorter: true,
       order: 4,
     },
     {
-      title: "用户昵称",
-      dataIndex: "nickName",
-      ellipsis: true,
-      sorter: true,
-      search: false,
-    },
-    {
       title: "部门名称",
-      key: "deptName",
+      key: "project_name",
+      ellipsis: true,
       search: false,
-      render: (text, record) => record.dept?.deptName,
+      render: (text, record) => {
+        if (record.project_roles.length > 0) {
+          return record.project_roles[0].project_name ?? "-";
+        }
+        return "-";
+      },
     },
-
     {
       title: "手机号",
       fieldProps: {
         placeholder: "请输入手机号",
       },
-      dataIndex: "phonenumber",
+      dataIndex: "phone",
       order: 3,
     },
     {
@@ -138,13 +146,13 @@ export default function User() {
       valueType: "select",
       order: 2,
       valueEnum: {
-        0: {
+        true: {
           text: "正常",
-          status: "0",
+          status: true,
         },
-        1: {
+        false: {
           text: "停用",
-          status: "1",
+          status: false,
         },
       },
       render: (text, record) => {
@@ -153,9 +161,9 @@ export default function User() {
             <Switch
               checkedChildren={<CheckOutlined />}
               unCheckedChildren={<CloseOutlined />}
-              defaultChecked={record.status === "0"}
-              checked={rowStatusMap[record.userId]}
-              disabled={record.userId == 1}
+              defaultChecked={record.status}
+              checked={rowStatusMap[record.id]}
+              disabled={record.id == 1}
               onChange={(checked, event) => {
                 showSwitchUserStatusModal(checked, record);
               }}
@@ -166,35 +174,18 @@ export default function User() {
     },
     {
       title: "创建时间",
-      dataIndex: "createTime",
+      dataIndex: "gmt_create",
       valueType: "dateTime",
+      ellipsis: true,
       search: false,
       sorter: true,
-    },
-    {
-      title: "创建时间",
-      fieldProps: {
-        placeholder: ["开始日期", "结束日期"],
-      },
-      dataIndex: "createTimeRange",
-      valueType: "dateRange",
-      hideInTable: true,
-      order: 1,
-      search: {
-        transform: (value) => {
-          return {
-            "params[beginTime]": `${value[0]} 00:00:00`,
-            "params[endTime]": `${value[1]} 23:59:59`,
-          };
-        },
-      },
     },
     {
       title: "操作",
       key: "option",
       search: false,
       render: (_, record) => {
-        if (record.userId != 1)
+        if (record.id != 1)
           return [
             <Button
               key="modifyBtn"
@@ -315,33 +306,35 @@ export default function User() {
   //查询用户数据
   const getUser = async (params: any, sorter: any, filter: any) => {
     const searchParams = {
-      pageNum: params.current,
+      page: params.current - 1,
+      size: params.pageSize,
       ...params,
     };
 
     delete searchParams.current;
+    delete searchParams.pageSize;
 
     const queryParams = new URLSearchParams(searchParams);
 
     Object.keys(sorter).forEach((key) => {
-      queryParams.append("orderByColumn", key);
+      queryParams.append("property", key);
       if (sorter[key] === "ascend") {
-        queryParams.append("isAsc", "ascending");
+        queryParams.append("order", "asc");
       } else {
-        queryParams.append("isAsc", "descending");
+        queryParams.append("order", "desc");
       }
     });
 
     //如果有组织id，添加相应查询参数
-    if (searchDeptId != 0) {
-      queryParams.append("deptId", searchDeptId.toString());
+    if (searchProjectId != 0) {
+      queryParams.append("project_id", searchProjectId.toString());
     }
 
-    const body = await fetchApi(`/api/system/user/list?${queryParams}`, push);
+    const body = await fetchApi(`/api/users?${queryParams}`, push);
 
     if (body !== undefined) {
-      body.rows.forEach((row: any) => {
-        setRowStatusMap({ ...rowStatusMap, [row.userId]: row.status === "0" });
+      body.data.content.forEach((row: any) => {
+        setRowStatusMap({ ...rowStatusMap, [row.id]: row.status });
       });
     }
 
@@ -350,19 +343,21 @@ export default function User() {
 
   //展示切换用户状态对话框
   const showSwitchUserStatusModal = (checked: boolean, record: any) => {
-    setRowStatusMap({ ...rowStatusMap, [record.userId]: checked });
+    setRowStatusMap({ ...rowStatusMap, [record.id]: checked });
 
     Modal.confirm({
       title: "系统提示",
       icon: <ExclamationCircleFilled />,
-      content: `确认要${checked ? "启用" : "停用"}"${record.userName}"用户吗？`,
+      content: `确认要${checked ? "启用" : "停用"}"${
+        record.user_name
+      }"用户吗？`,
       onOk() {
         executeSwitchStatus(checked, record.userId, () => {
-          setRowStatusMap({ ...rowStatusMap, [record.userId]: !checked });
+          setRowStatusMap({ ...rowStatusMap, [record.id]: !checked });
         });
       },
       onCancel() {
-        setRowStatusMap({ ...rowStatusMap, [record.userId]: !checked });
+        setRowStatusMap({ ...rowStatusMap, [record.id]: !checked });
       },
     });
   };
@@ -418,20 +413,21 @@ export default function User() {
         setSelectedRow(undefined);
       }
     },
+
     getCheckboxProps: (record: any) => ({
-      disabled: record.userId == 1,
+      disabled: record.id == 1,
     }),
   };
 
   //查询用的组织id
-  const [searchDeptId, setSearchDeptId] = useState(0);
+  const [searchProjectId, setSearchProjectId] = useState(0);
 
   //选择组织树执行过滤
-  const selectOrgData = (selectedDeptKey: React.Key[]) => {
-    if (selectedDeptKey && selectedDeptKey.length > 0) {
-      setSearchDeptId(selectedDeptKey[0] as number);
+  const selectOrgData = (selectedProjectKey: React.Key[]) => {
+    if (selectedProjectKey && selectedProjectKey.length > 0) {
+      setSearchProjectId(selectedProjectKey[0] as number);
     } else {
-      setSearchDeptId(0);
+      setSearchProjectId(0);
     }
 
     if (formRef.current) {
@@ -443,15 +439,33 @@ export default function User() {
   const [orgTreeData, setOrgTreeData] = useState([] as Array<TreeDataNode>);
 
   //用于对话框的组织选择数据
-  const [orgSelectData, setOrgSelectData] = useState([]);
+  const [orgSelectData, setOrgSelectData] = useState([] as Array<TreeDataNode>);
 
   //查询组织树
   const queryOrgTree = async () => {
-    const body = await fetchApi("/api/system/user/deptTree", push);
+    const body = await fetchApi("/api/projects/tree", push);
     if (body !== undefined) {
-      setOrgTreeData(generateOrgTree(body.data));
+      const tree = generateOrgTree(body.data);
+      setOrgTreeData(tree);
       setSearchValue("");
-      setOrgSelectData(body.data);
+      setOrgSelectData(tree);
+    }
+  };
+
+  //查询角色信息
+  const queryRole = async () => {
+    const body = await fetchApi("/api/roles", push);
+    if (body !== undefined) {
+      const roleArray: Array<OptionType> = new Array<OptionType>();
+      body.data.content.forEach((role: any) => {
+        const option: OptionType = {
+          label: role.name,
+          value: role.id,
+        };
+        roleArray.push(option);
+      });
+
+      setRoleValue(roleArray);
     }
   };
 
@@ -498,92 +512,56 @@ export default function User() {
   const generateOrgTree = (orgData: []) => {
     const children: Array<TreeDataNode> = new Array<TreeDataNode>();
 
-    orgData.forEach((parent: any) => {
-      const hasChild = parent.children && parent.children.length > 0;
+    orgData.forEach((item: any) => {
       const node: TreeDataNode = {
-        title: parent.label,
-        key: parent.id,
+        title: item.name,
+        key: item.id,
       };
-
       children.push(node);
-
-      if (hasChild) {
-        generateOrgChildTree(parent.children, node);
-      }
+      parseChild(item, node);
     });
     return children;
   };
 
-  const generateOrgChildTree = (orgData: [], parent: TreeDataNode) => {
-    const children: Array<TreeDataNode> = new Array<TreeDataNode>();
-    orgData.forEach((item: any) => {
-      const hasChild = item.children && item.children.length > 0;
+  const parseChild = (parentItem: any, parentNode: TreeDataNode) => {
+    if (parentItem.children.length == 0) {
+      return;
+    }
+
+    parentItem.children.sort((a: any, b: any) => a.order - b.order);
+
+    parentNode.children = new Array<TreeDataNode>();
+
+    parentItem.children.forEach((child: any) => {
       const node: TreeDataNode = {
-        title: item.label,
-        key: item.id,
-        isLeaf: !hasChild,
+        title: child.name,
+        key: child.id,
       };
 
-      children.push(node);
-
-      if (hasChild) {
-        generateOrgChildTree(item.children, node);
-      }
+      parentNode.children.push(node);
+      parseChild(child, node);
     });
-
-    parent.children = children;
-    return parent;
   };
-
-  //查询性别分类
-  const querySexType = async () => {
-    const body = await fetchApi(
-      "/api/system/dict/data/type/sys_user_sex",
-      push
-    );
-    if (body !== undefined) {
-      return body.data;
-    }
-  };
-
-  //查询新建用户预置密码
-  const queryDefaultPassword = async () => {
-    const body = await fetchApi(
-      "/api/system/config/configKey/sys.user.initPassword",
-      push
-    );
-    if (body !== undefined) {
-      setDefaultPassword(body.msg);
-    }
-  };
-
-  //岗位数据
-  const [positionValue, setPositionValue] = useState<{ [key: number]: string }>(
-    {}
-  );
 
   //角色数据
-  const [roleValue, setRoleValue] = useState<{ [key: number]: string }>({});
-
-  //查询岗位
-  const queryPostion = async () => {
-    const body = await fetchApi("/api/system/user/", push);
-
-    if (body !== undefined) {
-      body.posts.forEach((post: any) => {
-        positionValue[post.postId] = post.postName;
-        setPositionValue(positionValue);
-      });
-      body.roles.forEach((role: any) => {
-        roleValue[role.roleId] = role.roleName;
-        setRoleValue(roleValue);
-      });
-    }
-  };
+  const [roleValue, setRoleValue] = useState([] as Array<OptionType>);
 
   //确定新建用户
   const executeAddUser = async (values: any) => {
-    const body = await fetchApi("/api/system/user", push, {
+    values = {
+      ...values,
+      project_roles: [
+        {
+          project_id: values.project_id,
+          role_id: values.role_id,
+        },
+      ],
+    };
+
+    delete values.project_id;
+    delete values.role_id;
+
+    const body = await fetchApi("/api/users", push, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -592,15 +570,15 @@ export default function User() {
     });
 
     if (body != undefined) {
-      if (body.code == 200) {
-        message.success(body.msg);
+      if (body.success) {
+        message.success("添加用户成功");
         if (actionRef.current) {
           actionRef.current.reload();
         }
         return true;
       }
 
-      message.error(body.msg);
+      message.error(body.message);
       return false;
     }
     return false;
@@ -609,15 +587,6 @@ export default function User() {
   //修改用户表单引用
   const modifyFormRef = useRef<ProFormInstance>();
 
-  //待修改用户的岗位可选数据
-  const [modifyPositionValue, setModifyPositionValue] = useState(
-    [] as Array<OptionType>
-  );
-  //待修改用户的角色可选数据
-  const [modifyRoleValue, setModifyRoleValue] = useState(
-    [] as Array<OptionType>
-  );
-
   //操作用户的附加数据
   const [attachUserdata, setAttachUserdata] = useState<{ [key: string]: any }>(
     {}
@@ -625,52 +594,24 @@ export default function User() {
 
   //查询用户信息
   const queryUserInfo = async (record?: any) => {
-    const userId = record !== undefined ? record.userId : selectedRow.userId;
-    const userName =
-      record !== undefined ? record.userName : selectedRow.userName;
+    const userId = record !== undefined ? record.id : selectedRow.id;
 
-    attachUserdata["userId"] = userId;
-    attachUserdata["userName"] = userName;
+    attachUserdata["id"] = userId;
 
     setAttachUserdata(attachUserdata);
 
     if (userId !== undefined) {
-      const body = await fetchApi(`/api/system/user/${userId}`, push);
+      const body = await fetchApi(`/api/users/${userId}`, push);
 
       if (body !== undefined) {
-        if (body.code == 200) {
-          const positionArray: Array<OptionType> = new Array<OptionType>();
-          body.posts.forEach((post: any) => {
-            const option: OptionType = {
-              label: post.postName,
-              value: post.postId,
-            };
-            positionArray.push(option);
-          });
-
-          setModifyPositionValue(positionArray);
-
-          const roeArray: Array<OptionType> = new Array<OptionType>();
-          body.roles.forEach((role: any) => {
-            const option: OptionType = {
-              label: role.roleName,
-              value: role.roleId,
-            };
-            roeArray.push(option);
-          });
-
-          setModifyRoleValue(roeArray);
-
+        if (body.success) {
           modifyFormRef?.current?.setFieldsValue({
-            nickName: body.data.nickName,
-            deptId: body.data.deptId,
-            phonenumber: body.data.phonenumber,
+            nick_name: body.data.nick_name,
+            user_name: body.data.user_name,
+            phone: body.data.phone,
             email: body.data.email,
             sex: body.data.sex,
             status: body.data.status,
-            postIds: body.postIds,
-            roleIds: body.roleIds,
-            remark: body.data.remark,
           });
         }
       }
@@ -679,10 +620,9 @@ export default function User() {
 
   //确认修改用户
   const executeModifyUser = async (values: any) => {
-    values["userId"] = attachUserdata["userId"];
-    values["userName"] = attachUserdata["userName"];
+    values["id"] = attachUserdata["id"];
 
-    const body = await fetchApi("/api/system/user", push, {
+    const body = await fetchApi("/api/users", push, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -691,23 +631,23 @@ export default function User() {
     });
 
     if (body !== undefined) {
-      if (body.code == 200) {
-        message.success(body.msg);
+      if (body.success) {
+        message.success("修改用户成功");
+        setShowModifyUserModal(false);
         //刷新列表
         if (actionRef.current) {
           actionRef.current.reload();
         }
         return true;
       }
-      message.error(body.msg);
+      message.error(body.message);
       return false;
     }
   };
 
   //点击删除按钮
   const onClickDeleteRow = (record?: any) => {
-    const userId =
-      record != undefined ? record.userId : selectedRowKeys.join(",");
+    const userId = record != undefined ? record.id : selectedRowKeys.join(",");
     Modal.confirm({
       title: "系统提示",
       icon: <ExclamationCircleFilled />,
@@ -773,11 +713,15 @@ export default function User() {
 
   //确定删除选中的用户
   const executeDeleteRow = async (userId: any) => {
-    const body = await fetchApi(`/api/system/user/${userId}`, push, {
-      method: "DELETE",
-    });
+    const body = await fetchApi(
+      `/api/users/${userId.includes(",") ? "batch/" : ""}${userId}`,
+      push,
+      {
+        method: "DELETE",
+      }
+    );
     if (body !== undefined) {
-      if (body.code == 200) {
+      if (body.success) {
         message.success("删除成功");
 
         //修改按钮变回不可点击
@@ -791,7 +735,7 @@ export default function User() {
           actionRef.current.reload();
         }
       } else {
-        message.error(body.msg);
+        message.error(body.message);
       }
     }
   };
@@ -809,7 +753,7 @@ export default function User() {
     const formData = new FormData();
     formData.append("file", file);
     const body = await fetchApi(
-      `/api/system/user/importData?updateSupport=${uploadSupport}`,
+      `/api/users/import?updateSupport=${uploadSupport}`,
       push,
       {
         method: "POST",
@@ -822,14 +766,14 @@ export default function User() {
 
     if (body !== undefined) {
       setFileList([]);
-      if (body.code == 200) {
+      if (body.success) {
         message.success("用户导入成功");
         //刷新列表
         if (actionRef.current) {
           actionRef.current.reload();
         }
       } else {
-        message.error(body.msg);
+        message.error(body.message);
       }
     }
   };
@@ -850,47 +794,18 @@ export default function User() {
 
   //当前页数和每页条数
   const [page, setPage] = useState(1);
-  const defualtPageSize = 10;
-  const [pageSize, setPageSize] = useState(defualtPageSize);
+  const defaultPageSize = 10;
+  const [pageSize, setPageSize] = useState(defaultPageSize);
 
   const pageChange = (page: number, pageSize: number) => {
     setPage(page);
     setPageSize(pageSize);
   };
 
-  //导出用户
-  const exportTable = async () => {
-    if (formRef.current) {
-      const formData = new FormData();
-
-      const data = {
-        pageNum: page,
-        pageSize: pageSize,
-        ...formRef.current.getFieldsValue(),
-      };
-
-      Object.keys(data).forEach((key) => {
-        if (data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      });
-
-      await fetchFile(
-        "/api/system/user/export",
-        push,
-        {
-          method: "POST",
-          body: formData,
-        },
-        `user_${new Date().getTime()}.xlsx`
-      );
-    }
-  };
-
   return (
     <PageContainer title={false}>
       <Row gutter={{ xs: 8, sm: 8, md: 8 }}>
-        <Col xs={24} sm={6} md={6}>
+        <Col xs={24} sm={8} md={6}>
           <ProCard>
             <Input
               style={{ marginBottom: 16 }}
@@ -914,10 +829,10 @@ export default function User() {
             )}
           </ProCard>
         </Col>
-        <Col xs={24} sm={18} md={18}>
+        <Col xs={24} sm={16} md={18}>
           <ProTable
             formRef={formRef}
-            rowKey="userId"
+            rowKey="id"
             rowSelection={{
               selectedRowKeys,
               ...rowSelection,
@@ -925,12 +840,12 @@ export default function User() {
             columns={columns}
             request={async (params: any, sorter: any, filter: any) => {
               // 表单搜索项会从 params 传入，传递给后端接口。
-              const data = await getUser(params, sorter, filter);
-              if (data !== undefined) {
+              const body = await getUser(params, sorter, filter);
+              if (body !== undefined) {
                 return Promise.resolve({
-                  data: data.rows,
+                  data: body.data.content,
                   success: true,
-                  total: data.total,
+                  total: body.data.total_size,
                 });
               }
               return Promise.resolve({
@@ -939,7 +854,7 @@ export default function User() {
               });
             }}
             pagination={{
-              pageSize: defualtPageSize,
+              defaultPageSize: defaultPageSize,
               showQuickJumper: true,
               showSizeChanger: true,
               onChange: pageChange,
@@ -974,35 +889,115 @@ export default function User() {
                   <ProForm.Group>
                     <ProFormText
                       width="md"
-                      name="nickName"
-                      label="用户昵称"
-                      placeholder="请输入用户昵称"
-                      rules={[{ required: true, message: "请输入用户昵称" }]}
+                      name="nick_name"
+                      label="姓名"
+                      placeholder="请输入姓名"
+                      rules={[{ required: true, message: "请输入姓名" }]}
                     />
-
+                    <ProFormSelect
+                      width="md"
+                      name="sex"
+                      label="用户性别"
+                      rules={[{ required: true, message: "请选择性别" }]}
+                      options={[
+                        {
+                          value: 1,
+                          label: "男",
+                        },
+                        {
+                          value: 0,
+                          label: "女",
+                        },
+                      ]}
+                    />
+                  </ProForm.Group>
+                  <ProForm.Group>
                     <ProFormTreeSelect
                       width="md"
-                      name="deptId"
-                      label="归属部门"
-                      placeholder="请选择归属部门"
+                      name="project_id"
+                      label="所属部门"
+                      placeholder="请选择所属部门"
+                      rules={[{ required: true, message: "请选择所属部门" }]}
                       request={async () => {
                         return orgSelectData;
                       }}
                       fieldProps={{
                         filterTreeNode: true,
-                        showSearch: true,
-                        treeNodeFilterProp: "label",
+                        treeNodeFilterProp: "title",
                         fieldNames: {
-                          label: "label",
-                          value: "id",
+                          label: "title",
+                          value: "key",
                         },
                       }}
+                    />
+                    <ProFormSelect
+                      width="md"
+                      name="role_id"
+                      label="角色"
+                      placeholder="请选择角色"
+                      rules={[{ required: true, message: "请选择角色" }]}
+                      options={roleValue}
                     />
                   </ProForm.Group>
                   <ProForm.Group>
                     <ProFormText
                       width="md"
-                      name="phonenumber"
+                      name="user_name"
+                      label="用户名"
+                      placeholder="请输入用户名"
+                      rules={[{ required: true, message: "请输入用户名" }]}
+                    />
+                    <ProFormRadio.Group
+                      name="status"
+                      width="sm"
+                      label="状态"
+                      initialValue={true}
+                      options={[
+                        {
+                          label: "正常",
+                          value: true,
+                        },
+                        {
+                          label: "停用",
+                          value: false,
+                        },
+                      ]}
+                    />
+                  </ProForm.Group>
+                  <ProForm.Group>
+                    <ProFormText.Password
+                      width="md"
+                      name="password"
+                      label="密码"
+                      initialValue={defaultPassword}
+                      placeholder="请输入密码"
+                      rules={[{ required: true, message: "请输入密码" }]}
+                    />
+                    <ProFormText.Password
+                      width="md"
+                      name="repeat_password"
+                      label="确认密码"
+                      initialValue={defaultPassword}
+                      placeholder="请再次输入密码"
+                      rules={[
+                        { required: true, message: "请再次输入密码" },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            if (!value || getFieldValue("password") === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(
+                              new Error("两次密码输入不一致")
+                            );
+                          },
+                        }),
+                      ]}
+                    />
+                  </ProForm.Group>
+                  <ProForm.Group>
+                    <ProFormText
+                      width="md"
+                      name="phone"
                       label="手机号码"
                       placeholder="请输入手机号码"
                       rules={[
@@ -1022,79 +1017,6 @@ export default function User() {
                       ]}
                     />
                   </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="userName"
-                      label="用户名称"
-                      placeholder="请输入用户名称"
-                      rules={[{ required: true, message: "请输入用户名称" }]}
-                    />
-                    <ProFormText.Password
-                      width="md"
-                      name="password"
-                      label="用户密码"
-                      initialValue={defaultPassword}
-                      placeholder="请输入用户密码"
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormSelect
-                      width="md"
-                      name="sex"
-                      label="用户性别"
-                      request={querySexType}
-                      fieldProps={{
-                        fieldNames: {
-                          label: "dictLabel",
-                          value: "dictValue",
-                        },
-                      }}
-                    />
-                    <ProFormRadio.Group
-                      name="status"
-                      width="sm"
-                      label="状态"
-                      initialValue="0"
-                      options={[
-                        {
-                          label: "正常",
-                          value: "0",
-                        },
-                        {
-                          label: "停用",
-                          value: "1",
-                        },
-                      ]}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormSelect
-                      width="md"
-                      name="postIds"
-                      label="岗位"
-                      fieldProps={{
-                        mode: "multiple",
-                      }}
-                      valueEnum={positionValue}
-                    />
-                    <ProFormSelect
-                      width="md"
-                      name="roleIds"
-                      label="角色"
-                      fieldProps={{
-                        mode: "multiple",
-                      }}
-                      valueEnum={roleValue}
-                    />
-                  </ProForm.Group>
-
-                  <ProFormTextArea
-                    name="remark"
-                    width={688}
-                    label="备注"
-                    placeholder="请输入内容"
-                  />
                 </ModalForm>,
                 <ModalForm
                   key="modifymodal"
@@ -1123,35 +1045,41 @@ export default function User() {
                   <ProForm.Group>
                     <ProFormText
                       width="md"
-                      name="nickName"
-                      label="用户昵称"
-                      placeholder="请输入用户昵称"
-                      rules={[{ required: true, message: "请输入用户昵称" }]}
-                    />
-
-                    <ProFormTreeSelect
-                      width="md"
-                      name="deptId"
-                      label="归属部门"
-                      placeholder="请选择归属部门"
-                      request={async () => {
-                        return orgSelectData;
-                      }}
-                      fieldProps={{
-                        filterTreeNode: true,
-                        showSearch: true,
-                        treeNodeFilterProp: "label",
-                        fieldNames: {
-                          label: "label",
-                          value: "id",
-                        },
-                      }}
+                      name="user_name"
+                      disabled
+                      label="用户名"
+                      placeholder=""
                     />
                   </ProForm.Group>
                   <ProForm.Group>
                     <ProFormText
                       width="md"
-                      name="phonenumber"
+                      name="nick_name"
+                      label="姓名"
+                      placeholder="请输入姓名"
+                      rules={[{ required: true, message: "请输入姓名" }]}
+                    />
+                    <ProFormSelect
+                      width="md"
+                      name="sex"
+                      label="用户性别"
+                      rules={[{ required: true, message: "请选择性别" }]}
+                      options={[
+                        {
+                          value: 1,
+                          label: "男",
+                        },
+                        {
+                          value: 0,
+                          label: "女",
+                        },
+                      ]}
+                    />
+                  </ProForm.Group>
+                  <ProForm.Group>
+                    <ProFormText
+                      width="md"
+                      name="phone"
                       label="手机号码"
                       placeholder="请输入手机号码"
                       rules={[
@@ -1171,62 +1099,6 @@ export default function User() {
                       ]}
                     />
                   </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormSelect
-                      width="md"
-                      name="sex"
-                      label="用户性别"
-                      request={querySexType}
-                      fieldProps={{
-                        fieldNames: {
-                          label: "dictLabel",
-                          value: "dictValue",
-                        },
-                      }}
-                    />
-                    <ProFormRadio.Group
-                      name="status"
-                      width="sm"
-                      label="状态"
-                      options={[
-                        {
-                          label: "正常",
-                          value: "0",
-                        },
-                        {
-                          label: "停用",
-                          value: "1",
-                        },
-                      ]}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormSelect
-                      width="md"
-                      name="postIds"
-                      label="岗位"
-                      fieldProps={{
-                        mode: "multiple",
-                      }}
-                      options={modifyPositionValue}
-                    />
-                    <ProFormSelect
-                      width="md"
-                      name="roleIds"
-                      label="角色"
-                      fieldProps={{
-                        mode: "multiple",
-                      }}
-                      options={modifyRoleValue}
-                    />
-                  </ProForm.Group>
-
-                  <ProFormTextArea
-                    name="remark"
-                    width={688}
-                    label="备注"
-                    placeholder="请输入内容"
-                  />
                 </ModalForm>,
 
                 <Button
@@ -1245,14 +1117,6 @@ export default function User() {
                   onClick={onClickImport}
                 >
                   导入
-                </Button>,
-                <Button
-                  key="export"
-                  type="primary"
-                  icon={<FontAwesomeIcon icon={faDownload} />}
-                  onClick={exportTable}
-                >
-                  导出
                 </Button>,
               ],
               settings: [

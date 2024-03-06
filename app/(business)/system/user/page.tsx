@@ -49,6 +49,7 @@ import {
   Tree,
   Typography,
   Upload,
+  Select
 } from "antd";
 import { useRouter } from "next/navigation";
 
@@ -216,7 +217,7 @@ export default function User() {
                           modifyUserPwd(record);
                         }}
                       >
-                        重置密码
+                        修改密码
                       </a>
                     ),
                     icon: <KeyOutlined />,
@@ -225,11 +226,11 @@ export default function User() {
                     key: "2",
                     label: (
                       <a
-                        onClick={() =>
-                          push(`/system/user/auth/${record.userId}`)
-                        }
+                        onClick={() => {
+                          modifyUserRole(record);
+                        }}
                       >
-                        分配角色
+                        修改角色
                       </a>
                     ),
                     icon: <FontAwesomeIcon icon={faUsers} />,
@@ -264,9 +265,10 @@ export default function User() {
   //重置密码表单引用
   const [pwdFormRef] = Form.useForm();
 
+  //点击修改密码
   const modifyUserPwd = (record: any) => {
-    attachUserdata["userId"] = record.userId;
-    attachUserdata["userName"] = record.userName;
+    attachUserdata["id"] = record.id;
+    attachUserdata["nick_name"] = record.nick_name;
     setAttachUserdata(attachUserdata);
 
     setShowModifyUserPwdModal(true);
@@ -279,14 +281,69 @@ export default function User() {
 
   //取消重置密码
   const cancelModifyUserPwd = () => {
+    pwdFormRef.resetFields();
     setShowModifyUserPwdModal(false);
   };
 
   //执行重置密码
   const executeModifyUserPwd = async (values: any) => {
     setShowModifyUserPwdModal(false);
-    values["userId"] = attachUserdata["userId"];
-    const body = await fetchApi("/api/system/user/resetPwd", push, {
+    values["id"] = attachUserdata["id"];
+    const body = await fetchApi(
+      `/api/users/password/${attachUserdata["id"]}`,
+      push,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      }
+    );
+    if (body != undefined) {
+      if (body.success) {
+        message.success(`修改${attachUserdata["nick_name"]}密码成功`);
+      } else {
+        message.error(body.message);
+      }
+    }
+    pwdFormRef.resetFields();
+  };
+
+  //是否展示角色修改对话框
+  const [showModifyRoleModal, setShowModifyRoleModal] = useState(false);
+
+  //点击修改角色
+  const modifyUserRole = (record: any) => {
+    attachUserdata["id"] = record.id;
+    attachUserdata["nick_name"]= record.nick_name;
+    const roleId = record.project_roles.length > 0 ? record.project_roles[0].role_id ?? null : null;
+    setShowModifyRoleModal(true);
+    roleFormRef.setFieldsValue ({
+      nick_name: record.nick_name,
+      role_id:roleId
+    });
+  };
+
+  //修改角色表单引用
+  const [roleFormRef] = Form.useForm();
+
+  //确认修改角色
+  const confirmModifyRole = () => {
+    roleFormRef.submit();
+  };
+
+  //取消修改角色
+  const cancelModifyRole = () => {
+    setShowModifyRoleModal(false);
+    roleFormRef.resetFields();
+  };
+
+  //执行修改角色
+  const executeModifyUserRole = async (values: any) => {
+    setShowModifyRoleModal(false);
+    values["user_id"] = attachUserdata["id"];
+    const body = await fetchApi(`/api/assignment`, push, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -294,13 +351,17 @@ export default function User() {
       body: JSON.stringify(values),
     });
     if (body != undefined) {
-      if (body.code == 200) {
-        message.success(`修改${attachUserdata["userName"]}密码成功`);
+      if (body.success) {
+        message.success(`修改${attachUserdata["nick_name"]}角色成功`);
+            //刷新列表
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
       } else {
-        message.error(body.msg);
+        message.error(body.message);
       }
     }
-    pwdFormRef.resetFields();
+    roleFormRef.resetFields();
   };
 
   //查询用户数据
@@ -1149,18 +1210,75 @@ export default function User() {
       </Row>
 
       <Modal
-        title={`修改${attachUserdata["userName"]}密码`}
+        title="修改密码"
         open={showModifyUserPwdModal}
         onOk={confirmModifyUserPwd}
         onCancel={cancelModifyUserPwd}
       >
-        <Form form={pwdFormRef} onFinish={executeModifyUserPwd}>
+        <Form
+          form={pwdFormRef}
+          onFinish={executeModifyUserPwd}
+          layout="vertical"
+        >
+          <Form.Item
+            label="姓名"
+            name="nick_name"
+            initialValue={attachUserdata["nick_name"]}
+          >
+            <Input disabled />
+          </Form.Item>
           <Form.Item
             label="新密码"
             name="password"
+            placeholder="请输入新密码"
             rules={[{ required: true, message: "请输入新密码" }]}
           >
             <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name="repeat_password"
+            label="确认密码"
+            placeholder="请再次输入新密码"
+            rules={[
+              { required: true, message: "请再次输入新密码" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("两次密码输入不一致"));
+                },
+              }),
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="修改角色"
+        open={showModifyRoleModal}
+        onOk={confirmModifyRole}
+        onCancel={cancelModifyRole}
+      >
+        <Form
+          form={roleFormRef}
+          onFinish={executeModifyUserRole}
+          layout="vertical"
+        >
+          <Form.Item
+            label="姓名"
+            name="nick_name"
+          >
+            <Input disabled />
+          </Form.Item>
+
+          <Form.Item
+            label="角色"
+            name="role_id"
+          >
+            <Select options={roleValue}/>
           </Form.Item>
         </Form>
       </Modal>

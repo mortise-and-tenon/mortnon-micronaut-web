@@ -110,11 +110,11 @@ export default function Menu() {
       valueEnum: {
         true: {
           text: "正常",
-          status: "0",
+          status: true,
         },
         false: {
           text: "停用",
-          status: "1",
+          status: false,
         },
       },
       order: 1,

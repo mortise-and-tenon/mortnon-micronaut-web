@@ -99,8 +99,8 @@ export default function Login() {
     const loginData: LoginReq = {
       username: values.username,
       password: values.password,
-      code: values.code,
-      verify_token: captcha.key,
+      verify_code: values.code,
+      verify_key: captcha.key,
     };
 
     //是否记住密码

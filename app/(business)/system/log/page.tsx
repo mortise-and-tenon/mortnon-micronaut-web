@@ -60,10 +60,10 @@ export default function OperLog() {
       order: 8,
     },
     {
-      title: "所属组织",
+      title: "所属部门",
       dataIndex: "project_name",
       ellipsis: true,
-      search: false,
+      order: 7,
     },
     {
       title: "IP 地址",
@@ -108,14 +108,14 @@ export default function OperLog() {
           status: "FAILURE",
         },
       },
-      order: 7,
+      order: 6,
     },
     {
       title: "级别",
       dataIndex: "level",
       valueType: "select",
       sorter: true,
-      order: 6,
+      order: 5,
       valueEnum: {
         INFO: {
           text: "提示",
@@ -137,7 +137,7 @@ export default function OperLog() {
       valueType: "dateTime",
       search: false,
       sorter: true,
-      order: 5,
+      order: 4,
     },
     {
       title: "操作时间",
@@ -364,7 +364,7 @@ export default function OperLog() {
             <ProDescriptions.Item label="操作人员">
               {selectedRow.user_name}
             </ProDescriptions.Item>
-            <ProDescriptions.Item label="所属组织">
+            <ProDescriptions.Item label="所属部门">
               {selectedRow.project_name}
             </ProDescriptions.Item>
           </ProDescriptions>

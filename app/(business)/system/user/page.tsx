@@ -49,7 +49,7 @@ import {
   Tree,
   Typography,
   Upload,
-  Select
+  Select,
 } from "antd";
 import { useRouter } from "next/navigation";
 
@@ -64,6 +64,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import SkeletonModal from "@/app/_modules/SkeletonModal";
 
 type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
 
@@ -99,9 +100,9 @@ export default function User() {
       search: false,
     },
     {
-      title: "用户名称",
+      title: "用户名",
       fieldProps: {
-        placeholder: "请输入用户名称",
+        placeholder: "请输入用户名",
       },
       dataIndex: "user_name",
       ellipsis: true,
@@ -109,9 +110,9 @@ export default function User() {
       order: 5,
     },
     {
-      title: "用户昵称",
+      title: "姓名",
       fieldProps: {
-        placeholder: "请输入用户昵称",
+        placeholder: "请输入姓名",
       },
       dataIndex: "nick_name",
       ellipsis: true,
@@ -119,13 +120,25 @@ export default function User() {
       order: 4,
     },
     {
-      title: "部门名称",
+      title: "所属部门",
       key: "project_name",
       ellipsis: true,
       search: false,
       render: (text, record) => {
         if (record.project_roles.length > 0) {
           return record.project_roles[0].project_name ?? "-";
+        }
+        return "-";
+      },
+    },
+    {
+      title: "绑定角色",
+      key: "role_name",
+      ellipsis: true,
+      search: false,
+      render: (text, record) => {
+        if (record.project_roles.length > 0) {
+          return record.project_roles[0].role_name ?? "-";
         }
         return "-";
       },
@@ -148,7 +161,7 @@ export default function User() {
       order: 2,
       valueEnum: {
         true: {
-          text: "正常",
+          text: "启用",
           status: true,
         },
         false: {
@@ -194,7 +207,7 @@ export default function User() {
               icon={<FontAwesomeIcon icon={faPenToSquare} />}
               onClick={() => showRowModifyModal(record)}
             >
-              修改
+              编辑
             </Button>,
             <Button
               key="deleteBtn"
@@ -255,6 +268,7 @@ export default function User() {
 
   //展示修改用户对话框
   const showRowModifyModal = (record?: any) => {
+    setEditLoading(true);
     queryUserInfo(record);
     setShowModifyUserModal(true);
   };
@@ -302,7 +316,7 @@ export default function User() {
     );
     if (body != undefined) {
       if (body.success) {
-        message.success(`修改${attachUserdata["nick_name"]}密码成功`);
+        message.success(`修改"${attachUserdata["nick_name"]}"密码成功`);
       } else {
         message.error(body.message);
       }
@@ -316,12 +330,15 @@ export default function User() {
   //点击修改角色
   const modifyUserRole = (record: any) => {
     attachUserdata["id"] = record.id;
-    attachUserdata["nick_name"]= record.nick_name;
-    const roleId = record.project_roles.length > 0 ? record.project_roles[0].role_id ?? null : null;
+    attachUserdata["nick_name"] = record.nick_name;
+    const roleId =
+      record.project_roles.length > 0
+        ? record.project_roles[0].role_id ?? null
+        : null;
     setShowModifyRoleModal(true);
-    roleFormRef.setFieldsValue ({
+    roleFormRef.setFieldsValue({
       nick_name: record.nick_name,
-      role_id:roleId
+      role_id: roleId,
     });
   };
 
@@ -353,10 +370,10 @@ export default function User() {
     if (body != undefined) {
       if (body.success) {
         message.success(`修改${attachUserdata["nick_name"]}角色成功`);
-            //刷新列表
-    if (actionRef.current) {
-      actionRef.current.reload();
-    }
+        //刷新列表
+        if (actionRef.current) {
+          actionRef.current.reload();
+        }
       } else {
         message.error(body.message);
       }
@@ -458,9 +475,6 @@ export default function User() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRow, setSelectedRow] = useState(undefined as any);
 
-  //修改按钮是否可用
-  const [rowCanModify, setRowCanModify] = useState(false);
-
   const rowSelection = {
     onChange: (newSelectedRowKeys: React.Key[], selectedRows: any[]) => {
       setSelectedRowKeys(newSelectedRowKeys);
@@ -468,9 +482,7 @@ export default function User() {
 
       if (newSelectedRowKeys && newSelectedRowKeys.length == 1) {
         setSelectedRow(selectedRows[0]);
-        setRowCanModify(true);
       } else {
-        setRowCanModify(false);
         setSelectedRow(undefined);
       }
     },
@@ -653,6 +665,9 @@ export default function User() {
     {}
   );
 
+  //修改用户数据加载状态
+  const [editLoading, setEditLoading] = useState(true);
+
   //查询用户信息
   const queryUserInfo = async (record?: any) => {
     const userId = record !== undefined ? record.id : selectedRow.id;
@@ -674,6 +689,8 @@ export default function User() {
             sex: body.data.sex,
             status: body.data.status,
           });
+
+          setEditLoading(false);
         }
       }
     }
@@ -785,8 +802,6 @@ export default function User() {
       if (body.success) {
         message.success("删除成功");
 
-        //修改按钮变回不可点击
-        setRowCanModify(false);
         //删除按钮变回不可点击
         setRowCanDelete(false);
         //选中行数据重置为空
@@ -955,19 +970,19 @@ export default function User() {
                       placeholder="请输入姓名"
                       rules={[{ required: true, message: "请输入姓名" }]}
                     />
-                    <ProFormSelect
-                      width="md"
+                    <ProFormRadio.Group
                       name="sex"
-                      label="用户性别"
-                      rules={[{ required: true, message: "请选择性别" }]}
+                      width="md"
+                      label="性别"
+                      initialValue={1}
                       options={[
                         {
-                          value: 1,
                           label: "男",
+                          value: 1,
                         },
                         {
-                          value: 0,
                           label: "女",
+                          value: 0,
                         },
                       ]}
                     />
@@ -978,6 +993,9 @@ export default function User() {
                       name="project_id"
                       label="所属部门"
                       placeholder="请选择所属部门"
+                      initialValue={
+                        searchProjectId == 0 ? null : searchProjectId
+                      }
                       rules={[{ required: true, message: "请选择所属部门" }]}
                       request={async () => {
                         return orgSelectData;
@@ -1015,7 +1033,7 @@ export default function User() {
                       initialValue={true}
                       options={[
                         {
-                          label: "正常",
+                          label: "启用",
                           value: true,
                         },
                         {
@@ -1083,15 +1101,6 @@ export default function User() {
                   key="modifymodal"
                   title="修改用户"
                   formRef={modifyFormRef}
-                  trigger={
-                    <Button
-                      icon={<FontAwesomeIcon icon={faPenToSquare} />}
-                      disabled={!rowCanModify}
-                      onClick={() => showRowModifyModal()}
-                    >
-                      修改
-                    </Button>
-                  }
                   open={showModifyUserModal}
                   autoFocusFirstInput
                   modalProps={{
@@ -1103,63 +1112,68 @@ export default function User() {
                   submitTimeout={2000}
                   onFinish={executeModifyUser}
                 >
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="user_name"
-                      disabled
-                      label="用户名"
-                      placeholder=""
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="nick_name"
-                      label="姓名"
-                      placeholder="请输入姓名"
-                      rules={[{ required: true, message: "请输入姓名" }]}
-                    />
-                    <ProFormSelect
-                      width="md"
-                      name="sex"
-                      label="用户性别"
-                      rules={[{ required: true, message: "请选择性别" }]}
-                      options={[
-                        {
-                          value: 1,
-                          label: "男",
-                        },
-                        {
-                          value: 0,
-                          label: "女",
-                        },
-                      ]}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="phone"
-                      label="手机号码"
-                      placeholder="请输入手机号码"
-                      rules={[
-                        {
-                          pattern: /^1\d{10}$/,
-                          message: "请输入正确的手机号码",
-                        },
-                      ]}
-                    />
-                    <ProFormText
-                      width="md"
-                      name="email"
-                      label="邮箱"
-                      placeholder="请输入邮箱"
-                      rules={[
-                        { type: "email", message: "请输入正确的邮箱地址" },
-                      ]}
-                    />
-                  </ProForm.Group>
+                  {editLoading ? (
+                    <SkeletonModal />
+                  ) : (
+                    <>
+                      <ProForm.Group>
+                        <ProFormText
+                          width="md"
+                          name="user_name"
+                          disabled
+                          label="用户名"
+                          placeholder=""
+                        />
+                      </ProForm.Group>
+                      <ProForm.Group>
+                        <ProFormText
+                          width="md"
+                          name="nick_name"
+                          label="姓名"
+                          placeholder="请输入姓名"
+                          rules={[{ required: true, message: "请输入姓名" }]}
+                        />
+                        <ProFormRadio.Group
+                          name="sex"
+                          width="md"
+                          label="性别"
+                          options={[
+                            {
+                              label: "男",
+                              value: 1,
+                            },
+                            {
+                              label: "女",
+                              value: 0,
+                            },
+                          ]}
+                        />
+                      </ProForm.Group>
+                      <ProForm.Group>
+                        <ProFormText
+                          width="md"
+                          name="phone"
+                          label="手机号码"
+                          placeholder="请输入手机号码"
+                          rules={[
+                            {
+                              pattern: /^1\d{10}$/,
+                              message: "请输入正确的手机号码",
+                            },
+                          ]}
+                        />
+                        <ProFormText
+                          width="md"
+                          name="email"
+                          label="邮箱"
+                          placeholder="请输入邮箱"
+                          rules={[
+                            { type: "email", message: "请输入正确的邮箱地址" },
+                          ]}
+                        />
+                      </ProForm.Group>
+                    </>
+                  )}
                 </ModalForm>,
 
                 <Button
@@ -1267,18 +1281,12 @@ export default function User() {
           onFinish={executeModifyUserRole}
           layout="vertical"
         >
-          <Form.Item
-            label="姓名"
-            name="nick_name"
-          >
+          <Form.Item label="姓名" name="nick_name">
             <Input disabled />
           </Form.Item>
 
-          <Form.Item
-            label="角色"
-            name="role_id"
-          >
-            <Select options={roleValue}/>
+          <Form.Item label="角色" name="role_id">
+            <Select options={roleValue} />
           </Form.Item>
         </Form>
       </Modal>

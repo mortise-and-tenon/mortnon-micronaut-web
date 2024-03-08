@@ -38,6 +38,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { IconMap } from "@/app/_modules/definies";
 import { useRef, useState } from "react";
+import SkeletonModal from "@/app/_modules/SkeletonModal";
 
 //查询表格数据API
 const queryAPI = "/api/menus";
@@ -109,7 +110,7 @@ export default function Menu() {
       },
       valueEnum: {
         true: {
-          text: "正常",
+          text: "启用",
           status: true,
         },
         false: {
@@ -136,7 +137,7 @@ export default function Menu() {
           icon={<FontAwesomeIcon icon={faPenToSquare} />}
           onClick={() => onClickShowRowModifyModal(record)}
         >
-          修改
+          编辑
         </Button>,
         <Button
           key="newBtn"
@@ -276,8 +277,12 @@ export default function Menu() {
   //是否展示修改对话框
   const [isShowModifyDataModal, setIsShowModifyDataModal] = useState(false);
 
+  //修改框加载状态
+  const [editLoading,setEditLoading] = useState(true);
+
   //展示修改对话框
   const onClickShowRowModifyModal = (record: any) => {
+    setEditLoading(true);
     queryRowData(record);
     setIsShowModifyDataModal(true);
   };
@@ -313,6 +318,7 @@ export default function Menu() {
             icon: body.data.icon,
             status: body.data.status,
           });
+          setEditLoading(false);
         }
       }
     }
@@ -579,7 +585,7 @@ export default function Menu() {
                   initialValue={true}
                   options={[
                     {
-                      label: "正常",
+                      label: "启用",
                       value: true,
                     },
                     {
@@ -626,7 +632,7 @@ export default function Menu() {
       />
       <ModalForm
         key="modifymodal"
-        title="修改菜单"
+        title="编辑菜单"
         formRef={modifyFormRef}
         open={isShowModifyDataModal}
         autoFocusFirstInput
@@ -639,95 +645,100 @@ export default function Menu() {
         submitTimeout={2000}
         onFinish={executeModifyData}
       >
-        <ProForm.Group>
-          <ProFormTreeSelect
-            width="md"
-            name="parent_id"
-            initialValue={rowParentId}
-            label="上级菜单"
-            placeholder="请选择上级菜单"
-            rules={[{ required: true, message: "请选择上级菜单" }]}
-            request={getMenuList}
-            fieldProps={{
-              filterTreeNode: true,
-              showSearch: true,
-              treeNodeFilterProp: "label",
-              fieldNames: {
-                label: "name",
-                value: "id",
-              },
-            }}
-          />
-        </ProForm.Group>
+        {editLoading ? (
+          <SkeletonModal />
+        ) : (
+          <>
+            <ProForm.Group>
+              <ProFormTreeSelect
+                width="md"
+                name="parent_id"
+                initialValue={rowParentId}
+                label="上级菜单"
+                placeholder="请选择上级菜单"
+                rules={[{ required: true, message: "请选择上级菜单" }]}
+                request={getMenuList}
+                fieldProps={{
+                  filterTreeNode: true,
+                  showSearch: true,
+                  treeNodeFilterProp: "label",
+                  fieldNames: {
+                    label: "name",
+                    value: "id",
+                  },
+                }}
+              />
+            </ProForm.Group>
 
-        <ProForm.Group>
-          <ProFormSelect
-            width="md"
-            name="icon"
-            label="菜单图标"
-            fieldProps={{
-              showSearch,
-            }}
-            valueEnum={IconData}
-            placeholder="请选择菜单图标"
-            rules={[{ required: true, message: "请选择菜单图标" }]}
-          />
+            <ProForm.Group>
+              <ProFormSelect
+                width="md"
+                name="icon"
+                label="菜单图标"
+                fieldProps={{
+                  showSearch,
+                }}
+                valueEnum={IconData}
+                placeholder="请选择菜单图标"
+                rules={[{ required: true, message: "请选择菜单图标" }]}
+              />
 
-          <ProFormText
-            width="md"
-            name="name"
-            label="菜单名称"
-            placeholder="请输入菜单名称"
-            rules={[{ required: true, message: "请输入菜单名称" }]}
-          />
-        </ProForm.Group>
+              <ProFormText
+                width="md"
+                name="name"
+                label="菜单名称"
+                placeholder="请输入菜单名称"
+                rules={[{ required: true, message: "请输入菜单名称" }]}
+              />
+            </ProForm.Group>
 
-        <ProForm.Group>
-          <ProFormDigit
-            fieldProps={{ precision: 0 }}
-            width="md"
-            name="order"
-            initialValue="1"
-            label="排序"
-            placeholder="请输入排序"
-            rules={[{ required: true, message: "请输入排序" }]}
-          />
-          <ProFormText
-            width="md"
-            name="url"
-            label="路由地址"
-            placeholder="请输入路由地址"
-            rules={[{ required: true, message: "请输入路由地址" }]}
-          />
-        </ProForm.Group>
+            <ProForm.Group>
+              <ProFormDigit
+                fieldProps={{ precision: 0 }}
+                width="md"
+                name="order"
+                initialValue="1"
+                label="排序"
+                placeholder="请输入排序"
+                rules={[{ required: true, message: "请输入排序" }]}
+              />
+              <ProFormText
+                width="md"
+                name="url"
+                label="路由地址"
+                placeholder="请输入路由地址"
+                rules={[{ required: true, message: "请输入路由地址" }]}
+              />
+            </ProForm.Group>
 
-        <ProForm.Group>
-          <ProFormText
-            width="md"
-            name="permission"
-            label="权限字符"
-            placeholder="请输入权限字符"
-          />
+            <ProForm.Group>
+              <ProFormText
+                width="md"
+                name="permission"
+                label="权限字符"
+                placeholder="请输入权限字符"
+              />
 
-          <ProFormRadio.Group
-            name="status"
-            width="md"
-            label="菜单状态"
-            initialValue={true}
-            options={[
-              {
-                label: "正常",
-                value: true,
-              },
-              {
-                label: "停用",
-                value: false,
-              },
-            ]}
-          />
-        </ProForm.Group>
+              <ProFormRadio.Group
+                name="status"
+                width="md"
+                label="菜单状态"
+                initialValue={true}
+                options={[
+                  {
+                    label: "启用",
+                    value: true,
+                  },
+                  {
+                    label: "停用",
+                    value: false,
+                  },
+                ]}
+              />
+            </ProForm.Group>
+          </>
+        )}
       </ModalForm>
-      ,
     </PageContainer>
   );
 }

@@ -7,9 +7,26 @@ import type {
   ProColumns,
   ProFormInstance,
 } from "@ant-design/pro-components";
-import { PageContainer, ProTable } from "@ant-design/pro-components";
+import {
+  PageContainer,
+  ProTable,
+  ModalForm,
+  ProForm,
+  ProFormTreeSelect,
+  ProFormText,
+} from "@ant-design/pro-components";
 
-import { Button, Form, Input, message, Modal, Select, Space, Tag } from "antd";
+import {
+  Button,
+  Form,
+  Input,
+  message,
+  Modal,
+  Select,
+  Space,
+  Tag,
+  TreeSelect,
+} from "antd";
 import { useRouter } from "next/navigation";
 
 import {
@@ -28,10 +45,14 @@ export type OptionType = {
   value: string | number;
 };
 
-export default function RoleAuth({ params }: { params: { roleId: number } }) {
+export default function ProjectAuth({
+  params,
+}: {
+  params: { projectId: number };
+}) {
   const { push } = useRouter();
 
-  const roleId = params.roleId;
+  const projectId = params.projectId;
 
   //表格列定义
   const columns: ProColumns[] = [
@@ -120,23 +141,19 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
               key="deleteBtn"
               type="link"
               icon={<FontAwesomeIcon icon={faUsers} />}
-              onClick={() => modifyUserRole(record)}
+              onClick={() => modifyUserProject(record)}
             >
-              修改角色
+              变更部门
             </Button>,
           ];
       },
     },
   ];
 
-  useEffect(() => {
-    queryRole();
-  }, []);
-
-  //查询角色授权数据
-  const getRoleAllocate = async (params: any, sorter: any, filter: any) => {
+  //查询部门关联用户数据
+  const getProjectAllocate = async (params: any, sorter: any, filter: any) => {
     const searchParams = {
-      role_id: roleId,
+      project_id: projectId,
       page: params.current - 1,
       size: params.pageSize,
       ...params,
@@ -172,24 +189,35 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
   //当前默认条数
   const defaultPageSize = 10;
 
-  //角色数据
-  const [roleValue, setRoleValue] = useState([] as Array<OptionType>);
+  useEffect(() => {
+    getDeptList();
+  }, []);
 
-  //查询角色信息
-  const queryRole = async () => {
-    const body = await fetchApi("/api/roles", push);
+  const [projectValue, setProjectValue] = useState([]);
+
+  //查询组织信息
+  const getDeptList = async () => {
+    const body = await fetchApi("/api/projects/tree", push);
     if (body !== undefined) {
-      const roleArray: Array<OptionType> = new Array<OptionType>();
-      body.data.content.forEach((role: any) => {
-        const option: OptionType = {
-          label: role.name,
-          value: role.id,
-        };
-        roleArray.push(option);
+      body.data.forEach((item: any) => {
+        parseChild(item);
       });
 
-      setRoleValue(roleArray);
+      setProjectValue(body.data);
     }
+  };
+
+  const parseChild = (parentNode: any) => {
+    if (parentNode.children.length == 0) {
+      delete parentNode.children;
+      return;
+    }
+
+    parentNode.children.sort((a: any, b: any) => a.order - b.order);
+
+    parentNode.children.forEach((child: any) => {
+      parseChild(child);
+    });
   };
 
   //操作用户的附加数据
@@ -197,41 +225,41 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
     {}
   );
 
-  //是否展示角色修改对话框
-  const [showModifyRoleModal, setShowModifyRoleModal] = useState(false);
+  //是否展示部门修改对话框
+  const [showModifyProjectModal, setShowModifyProjectModal] = useState(false);
 
-  //点击修改角色
-  const modifyUserRole = (record: any) => {
+  //修改部门表单引用
+  const [projectFormRef] = Form.useForm();
+
+  //确认修改部门
+  const confirmModifyProject = () => {
+    projectFormRef.submit();
+  };
+
+  //点击修改部门
+  const modifyUserProject = (record: any) => {
     attachUserdata["id"] = record.id;
     attachUserdata["nick_name"] = record.nick_name;
-    const roleId =
+    const projectId =
       record.project_roles.length > 0
-        ? record.project_roles[0].role_id ?? null
+        ? record.project_roles[0].project_id ?? null
         : null;
-    setShowModifyRoleModal(true);
-    roleFormRef.setFieldsValue({
+    setShowModifyProjectModal(true);
+    projectFormRef.setFieldsValue({
       nick_name: record.nick_name,
-      role_id: roleId,
+      project_id: projectId,
     });
   };
 
-  //修改角色表单引用
-  const [roleFormRef] = Form.useForm();
-
-  //确认修改角色
-  const confirmModifyRole = () => {
-    roleFormRef.submit();
+  //取消修改部门
+  const cancelModifyProject = () => {
+    setShowModifyProjectModal(false);
+    projectFormRef.resetFields();
   };
 
-  //取消修改角色
-  const cancelModifyRole = () => {
-    setShowModifyRoleModal(false);
-    roleFormRef.resetFields();
-  };
-
-  //执行修改角色
-  const executeModifyUserRole = async (values: any) => {
-    setShowModifyRoleModal(false);
+  //执行修改部门
+  const executeModifyUserProject = async (values: any) => {
+    setShowModifyProjectModal(false);
     values["user_id"] = attachUserdata["id"];
     const body = await fetchApi(`/api/assignment`, push, {
       method: "PUT",
@@ -242,7 +270,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
     });
     if (body != undefined) {
       if (body.success) {
-        message.success(`修改"${attachUserdata["nick_name"]}"角色成功`);
+        message.success(`修改"${attachUserdata["nick_name"]}"部门成功`);
         //刷新列表
         if (actionRef.current) {
           actionRef.current.reload();
@@ -251,15 +279,15 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
         message.error(body.message);
       }
     }
-    roleFormRef.resetFields();
+    projectFormRef?.current?.resetFields();
   };
 
   return (
     <PageContainer
       header={{
-        title: "授权用户",
+        title: "部门成员",
         onBack(e) {
-          push("/system/role");
+          push("/system/project");
         },
       }}
     >
@@ -269,7 +297,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
         columns={columns}
         request={async (params: any, sorter: any, filter: any) => {
           // 表单搜索项会从 params 传入，传递给后端接口。
-          const body = await getRoleAllocate(params, sorter, filter);
+          const body = await getProjectAllocate(params, sorter, filter);
           if (body !== undefined) {
             return Promise.resolve({
               data: body.data.content,
@@ -325,23 +353,29 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
           ],
         }}
       />
+
       <Modal
-        title="修改角色"
-        open={showModifyRoleModal}
-        onOk={confirmModifyRole}
-        onCancel={cancelModifyRole}
+        title="编辑部门"
+        open={showModifyProjectModal}
+        onOk={confirmModifyProject}
+        onCancel={cancelModifyProject}
       >
         <Form
-          form={roleFormRef}
-          onFinish={executeModifyUserRole}
+          form={projectFormRef}
+          onFinish={executeModifyUserProject}
           layout="vertical"
         >
           <Form.Item label="姓名" name="nick_name">
             <Input disabled />
           </Form.Item>
-
-          <Form.Item label="角色" name="role_id">
-            <Select options={roleValue} />
+          <Form.Item label="部门" name="project_id">
+            <TreeSelect
+              fieldNames={{
+                label: "name",
+                value: "id",
+              }}
+              treeData={projectValue}
+            />
           </Form.Item>
         </Form>
       </Modal>

@@ -1,12 +1,12 @@
 "use client";
 
-import { fetchApi, fetchFile } from "@/app/_modules/func";
+import { fetchApi } from "@/app/_modules/func";
 import {
+  CaretDownOutlined,
   DeleteOutlined,
   ExclamationCircleFilled,
   PlusOutlined,
   ReloadOutlined,
-  CaretDownOutlined,
 } from "@ant-design/icons";
 import type {
   ActionType,
@@ -23,16 +23,13 @@ import {
   ProFormTreeSelect,
   ProTable,
 } from "@ant-design/pro-components";
-import { Button, message, Modal, Space, Tag, Dropdown } from "antd";
+import { Button, Dropdown, message, Modal, Space } from "antd";
 import { useRouter } from "next/navigation";
 
 import {
-  faCheck,
-  faDownload,
   faPenToSquare,
   faToggleOff,
   faToggleOn,
-  faXmark,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -70,6 +67,11 @@ export default function Role() {
       dataIndex: "name",
       sorter: true,
       order: 3,
+      render: (text, record) => {
+        return (
+          <a onClick={() => push(`/system/role/auth/${record.id}`)}>{text}</a>
+        );
+      },
     },
     {
       title: "标识值",
@@ -114,30 +116,7 @@ export default function Role() {
               onClick={() => onClickDeleteRow(record)}
             >
               删除
-            </Button>,
-            <Dropdown
-              key="moreDrop"
-              menu={{
-                items: [
-                  {
-                    key: "assignment",
-                    label: (
-                      <a onClick={() => push(`/system/role/auth/${record.id}`)}>
-                        分配用户
-                      </a>
-                    ),
-                    icon: <FontAwesomeIcon icon={faUsers} />,
-                  },
-                ],
-              }}
-            >
-              <a onClick={(e) => e.preventDefault()}>
-                <Space>
-                  更多
-                  <CaretDownOutlined />
-                </Space>
-              </a>
-            </Dropdown>,
+            </Button>
           ];
       },
     },
@@ -166,7 +145,7 @@ export default function Role() {
     });
 
     const body = await fetchApi(`${queryAPI}?${queryParams}`, push);
-    
+
     return body;
   };
 

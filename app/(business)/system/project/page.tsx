@@ -62,49 +62,19 @@ export default function Project() {
       },
       dataIndex: "name",
       order: 2,
+      render: (text, record) => {
+        return (
+          <a onClick={() => push(`/system/project/auth/${record.id}`)}>
+            {text}
+          </a>
+        );
+      },
     },
     {
       title: "排序",
       dataIndex: "order",
       width: 48,
       search: false,
-    },
-    {
-      title: "状态",
-      fieldProps: {
-        placeholder: "请选择部门状态",
-      },
-      dataIndex: "status",
-      valueType: "select",
-      render: (_, record) => {
-        return (
-          <Space>
-            <Tag
-              color={record.status ? "green" : "red"}
-              icon={
-                record.status ? (
-                  <FontAwesomeIcon icon={faCheck} />
-                ) : (
-                  <FontAwesomeIcon icon={faXmark} />
-                )
-              }
-            >
-              {_}
-            </Tag>
-          </Space>
-        );
-      },
-      valueEnum: {
-        true: {
-          text: "正常",
-          status: true,
-        },
-        false: {
-          text: "停用",
-          status: false,
-        },
-      },
-      order: 1,
     },
     {
       title: "备注",
@@ -132,7 +102,7 @@ export default function Project() {
               icon={<FontAwesomeIcon icon={faPenToSquare} />}
               onClick={() => onClickShowRowModifyModal(record)}
             >
-              修改
+              编辑
             </Button>,
             <Button
               key="newBtn"
@@ -151,7 +121,7 @@ export default function Project() {
               icon={<FontAwesomeIcon icon={faPenToSquare} />}
               onClick={() => onClickShowRowModifyModal(record)}
             >
-              修改
+              编辑
             </Button>,
             <Button
               key="newBtn"
@@ -289,7 +259,7 @@ export default function Project() {
   const [isShowModifyDataModal, setIsShowModifyDataModal] = useState(false);
 
   //编辑框加载状态
-  const [editLoading,setEditLoading] = useState(true);
+  const [editLoading, setEditLoading] = useState(true);
 
   //展示修改对话框
   const onClickShowRowModifyModal = (record: any) => {
@@ -306,11 +276,16 @@ export default function Project() {
     [key: string]: any;
   }>({});
 
+  //顶级部门编辑时不展示父部门
+  const [showParentProject, setShowParentProject] = useState(true);
+
   //查询并加载待修改数据的详细信息
   const queryRowData = async (record: any) => {
     const id = record.id;
 
     operatRowData["id"] = id;
+
+    setShowParentProject(id !== 1);
 
     setOperateRowData(operatRowData);
 
@@ -595,7 +570,7 @@ export default function Project() {
       />
       <ModalForm
         key="modifymodal"
-        title="修改部门"
+        title="编辑部门"
         formRef={modifyFormRef}
         open={isShowModifyDataModal}
         autoFocusFirstInput
@@ -613,23 +588,26 @@ export default function Project() {
         ) : (
           <>
             <ProForm.Group>
-              <ProFormTreeSelect
-                width="md"
-                name="parent_id"
-                label="上级部门"
-                placeholder="请选择上级部门"
-                rules={[{ required: true, message: "请选择上级部门" }]}
-                request={getDeptList}
-                fieldProps={{
-                  filterTreeNode: true,
-                  showSearch: true,
-                  treeNodeFilterProp: "label",
-                  fieldNames: {
-                    label: "name",
-                    value: "id",
-                  },
-                }}
-              />
+              {showParentProject && (
+                <ProFormTreeSelect
+                  width="md"
+                  name="parent_id"
+                  label="上级部门"
+                  placeholder="请选择上级部门"
+                  rules={[{ required: true, message: "请选择上级部门" }]}
+                  request={getDeptList}
+                  fieldProps={{
+                    filterTreeNode: true,
+                    showSearch: true,
+                    treeNodeFilterProp: "label",
+                    fieldNames: {
+                      label: "name",
+                      value: "id",
+                    },
+                  }}
+                />
+              )}
+
               <ProFormText
                 width="md"
                 name="name"

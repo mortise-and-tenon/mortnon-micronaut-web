@@ -369,7 +369,7 @@ export default function User() {
     });
     if (body != undefined) {
       if (body.success) {
-        message.success(`修改${attachUserdata["nick_name"]}角色成功`);
+        message.success(`修改"${attachUserdata["nick_name"]}"角色成功`);
         //刷新列表
         if (actionRef.current) {
           actionRef.current.reload();

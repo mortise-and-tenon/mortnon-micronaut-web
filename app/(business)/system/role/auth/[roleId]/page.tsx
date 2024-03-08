@@ -1,12 +1,7 @@
 "use client";
 
 import { fetchApi } from "@/app/_modules/func";
-import {
-  DeleteOutlined,
-  ExclamationCircleFilled,
-  PlusOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { ExclamationCircleFilled, ReloadOutlined } from "@ant-design/icons";
 import type {
   ActionType,
   ProColumns,
@@ -14,19 +9,19 @@ import type {
 } from "@ant-design/pro-components";
 import { PageContainer, ProTable } from "@ant-design/pro-components";
 
-import type { GetProp, UploadProps } from "antd";
-import { Button, message, Modal, Space, Tag, Upload } from "antd";
+import { Button, Form, Input, message, Modal, Select, Space, Tag } from "antd";
 import { useRouter } from "next/navigation";
 
 import {
   faCheck,
   faToggleOff,
   faToggleOn,
+  faUsers,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type OptionType = {
   label: string;
@@ -53,32 +48,6 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
       order: 4,
     },
     {
-      title: "性别",
-      dataIndex: "sex",
-      sorter: true,
-      order: 3,
-      valueEnum: {
-        0: {
-          text: "女",
-          status: 0,
-        },
-        1: {
-          text: "男",
-          status: 1,
-        },
-      },
-    },
-    {
-      title: "邮箱",
-      dataIndex: "email",
-      order: 2,
-    },
-    {
-      title: "手机号",
-      dataIndex: "phone",
-      order: 1,
-    },
-    {
       title: "状态",
       dataIndex: "status",
       search: false,
@@ -112,7 +81,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
       },
     },
     {
-      title: "所属组织",
+      title: "所属部门",
       key: "project",
       search: false,
       render: (text, record) => {
@@ -123,7 +92,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
       },
     },
     {
-      title: "角色",
+      title: "绑定角色",
       key: "role",
       search: false,
       render: (text, record) => {
@@ -150,109 +119,19 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
             <Button
               key="deleteBtn"
               type="link"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => onClickRemoveAuth(record)}
+              icon={<FontAwesomeIcon icon={faUsers} />}
+              onClick={() => modifyUserRole(record)}
             >
-              取消授权
+              修改角色
             </Button>,
           ];
       },
     },
   ];
 
-  //未分配授权用户列定义
-  const unAllocateColumns: ProColumns[] = [
-    {
-      title: "用户名称",
-      dataIndex: "user_name",
-      sorter: true,
-      order: 5,
-    },
-    {
-      title: "用户昵称",
-      dataIndex: "nick_name",
-      sorter: true,
-      order: 4,
-    },
-    {
-      title: "性别",
-      dataIndex: "sex",
-      sorter: true,
-      order: 3,
-      valueEnum: {
-        0: {
-          text: "女",
-          status: 0,
-        },
-        1: {
-          text: "男",
-          status: 1,
-        },
-      },
-    },
-    {
-      title: "邮箱",
-      dataIndex: "email",
-      order: 2,
-    },
-    {
-      title: "手机号",
-      dataIndex: "phone",
-      order: 1,
-    },
-    {
-      title: "状态",
-      dataIndex: "status",
-      search: false,
-      valueEnum: {
-        true: {
-          text: "正常",
-          status: true,
-        },
-        false: {
-          text: "停用",
-          status: false,
-        },
-      },
-      render: (text, record) => {
-        return (
-          <Space>
-            <Tag
-              color={record.status ? "green" : "red"}
-              icon={
-                record.status ? (
-                  <FontAwesomeIcon icon={faCheck} />
-                ) : (
-                  <FontAwesomeIcon icon={faXmark} />
-                )
-              }
-            >
-              {text}
-            </Tag>
-          </Space>
-        );
-      },
-    },
-    {
-      title: "所属组织",
-      key: "project",
-      search: false,
-      render: (text, record) => {
-        if (record.project_roles.length > 0) {
-          return record.project_roles[0].project_name ?? "-";
-        }
-        return "-";
-      },
-    },
-    {
-      title: "创建时间",
-      dataIndex: "gmt_create",
-      valueType: "dateTime",
-      sorter: true,
-      search: false,
-    },
-  ];
+  useEffect(() => {
+    queryRole();
+  }, []);
 
   //查询角色授权数据
   const getRoleAllocate = async (params: any, sorter: any, filter: any) => {
@@ -283,182 +162,6 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
     }
   };
 
-  //查询角色未授权数据
-  const getRoleUnallocate = async (params: any, sorter: any, filter: any) => {
-    const searchParams = {
-      role_id: roleId,
-      page: params.current - 1,
-      size: params.pageSize,
-      unassignment: true,
-      ...params,
-    };
-
-    delete searchParams.current;
-    delete searchParams.pageSize;
-
-    const queryParams = new URLSearchParams(searchParams);
-
-    Object.keys(sorter).forEach((key) => {
-      queryParams.append("property", key);
-      if (sorter[key] === "ascend") {
-        queryParams.append("order", "asc");
-      } else {
-        queryParams.append("order", "desc");
-      }
-    });
-
-    const body = await fetchApi(`/api/assignment?${queryParams}`, push);
-
-    if (body !== undefined) {
-      return body;
-    }
-  };
-
-  //点击取消授权按钮
-  const onClickRemoveAuth = (record: any) => {
-    const id = record.id;
-
-    Modal.confirm({
-      title: "系统提示",
-      icon: <ExclamationCircleFilled />,
-      content: `确定要取消用户“${record.nick_name}”的当前角色授权吗？`,
-      onOk() {
-        executeRemoveRoleAuth(id);
-      },
-      onCancel() {},
-    });
-  };
-
-  //执行批量取消用户角色授权
-  const executeBatchRemoveRoleAuth = async () => {
-    const data = {
-      roleId: roleId,
-      userIds: selectedRowKeys.join(","),
-    };
-
-    const body = await fetchApi(
-      `/api/users?${new URLSearchParams(data)}`,
-      push,
-      {
-        method: "PUT",
-      }
-    );
-
-    if (body !== undefined) {
-      if (body.code == 200) {
-        message.success("批量取消授权成功");
-      } else {
-        message.error(body.msg);
-      }
-
-      setSelectedRowKeys([]);
-      //刷新表格
-      if (actionRef.current) {
-        actionRef.current.reload();
-      }
-    }
-  };
-
-  //执行取消用户角色授权
-  const executeRemoveRoleAuth = async (userId: any) => {
-    const body = await fetchApi(
-      `/api/assignment/user/${userId}/role/${roleId}`,
-      push,
-      {
-        method: "DELETE",
-      }
-    );
-
-    if (body !== undefined) {
-      if (body.success) {
-        message.success("取消授权成功");
-      } else {
-        message.error(body.message);
-      }
-
-      //刷新表格
-      if (actionRef.current) {
-        actionRef.current.reload();
-      }
-    }
-  };
-
-  //选中行操作
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  const rowSelection = {
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
-    },
-  };
-
-  //未授权用户选中行操作
-  const [selectedRowKeysUnallocate, setSelectedRowKeysUnallocate] = useState<
-    React.Key[]
-  >([]);
-
-  const rowSelectionUnallocate = {
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeysUnallocate(newSelectedRowKeys);
-    },
-  };
-
-  //是否展示分配用户对话框
-  const [showUnallocateModal, setShowUnallocateModal] = useState(false);
-
-  //展示分配用户对话框
-  const onClickShowModal = () => {
-    if (unallocateActionRef.current) {
-      unallocateActionRef.current.reload();
-    }
-
-    setShowUnallocateModal(true);
-  };
-
-  //确认分配新的用户
-  const confirmAddUnallocate = async () => {
-    const data = {
-      role_id: roleId,
-      user_id_list: selectedRowKeysUnallocate,
-    };
-
-    const body = await fetchApi(`/api/assignment?`, push, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (body !== undefined) {
-      if (body.success) {
-        message.success("授权成功");
-      } else {
-        message.error(body.message);
-      }
-    }
-
-    setSelectedRowKeysUnallocate([]);
-
-    if (unallocateActionRef.current) {
-      unallocateActionRef.current.reload();
-    }
-
-    console.log(selectedRowKeysUnallocate);
-
-    if (actionRef.current) {
-      actionRef.current.reload();
-    }
-
-    setShowUnallocateModal(false);
-  };
-
-  //取消分配用户
-  const cancelAddUnallocate = () => {
-    setShowUnallocateModal(false);
-    setSelectedRowKeysUnallocate([]);
-  };
-
   //搜索栏显示状态
   const [showSearch, setShowSearch] = useState(true);
   //action对象引用
@@ -472,6 +175,88 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
   //当前默认条数
   const defaultPageSize = 10;
 
+  //角色数据
+  const [roleValue, setRoleValue] = useState([] as Array<OptionType>);
+
+  //查询角色信息
+  const queryRole = async () => {
+    const body = await fetchApi("/api/roles", push);
+    if (body !== undefined) {
+      const roleArray: Array<OptionType> = new Array<OptionType>();
+      body.data.content.forEach((role: any) => {
+        const option: OptionType = {
+          label: role.name,
+          value: role.id,
+        };
+        roleArray.push(option);
+      });
+
+      setRoleValue(roleArray);
+    }
+  };
+
+  //操作用户的附加数据
+  const [attachUserdata, setAttachUserdata] = useState<{ [key: string]: any }>(
+    {}
+  );
+
+  //是否展示角色修改对话框
+  const [showModifyRoleModal, setShowModifyRoleModal] = useState(false);
+
+  //点击修改角色
+  const modifyUserRole = (record: any) => {
+    attachUserdata["id"] = record.id;
+    attachUserdata["nick_name"] = record.nick_name;
+    const roleId =
+      record.project_roles.length > 0
+        ? record.project_roles[0].role_id ?? null
+        : null;
+    setShowModifyRoleModal(true);
+    roleFormRef.setFieldsValue({
+      nick_name: record.nick_name,
+      role_id: roleId,
+    });
+  };
+
+  //修改角色表单引用
+  const [roleFormRef] = Form.useForm();
+
+  //确认修改角色
+  const confirmModifyRole = () => {
+    roleFormRef.submit();
+  };
+
+  //取消修改角色
+  const cancelModifyRole = () => {
+    setShowModifyRoleModal(false);
+    roleFormRef.resetFields();
+  };
+
+  //执行修改角色
+  const executeModifyUserRole = async (values: any) => {
+    setShowModifyRoleModal(false);
+    values["user_id"] = attachUserdata["id"];
+    const body = await fetchApi(`/api/assignment`, push, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+    if (body != undefined) {
+      if (body.success) {
+        message.success(`修改"${attachUserdata["nick_name"]}"角色成功`);
+        //刷新列表
+        if (actionRef.current) {
+          actionRef.current.reload();
+        }
+      } else {
+        message.error(body.message);
+      }
+    }
+    roleFormRef.resetFields();
+  };
+
   return (
     <PageContainer
       header={{
@@ -484,10 +269,6 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
       <ProTable
         formRef={formRef}
         rowKey="id"
-        rowSelection={{
-          selectedRowKeys,
-          ...rowSelection,
-        }}
         columns={columns}
         request={async (params: any, sorter: any, filter: any) => {
           // 表单搜索项会从 params 传入，传递给后端接口。
@@ -520,16 +301,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
         dateFormatter="string"
         actionRef={actionRef}
         toolbar={{
-          actions: [
-            <Button
-              icon={<PlusOutlined />}
-              key="allocate"
-              type="primary"
-              onClick={onClickShowModal}
-            >
-              添加用户
-            </Button>,
-          ],
+          actions: [],
           settings: [
             {
               key: "switch",
@@ -557,54 +329,24 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
         }}
       />
       <Modal
-        title={`选择用户`}
-        width={1000}
-        open={showUnallocateModal}
-        onOk={confirmAddUnallocate}
-        onCancel={cancelAddUnallocate}
+        title="修改角色"
+        open={showModifyRoleModal}
+        onOk={confirmModifyRole}
+        onCancel={cancelModifyRole}
       >
-        <ProTable
-          rowKey="id"
-          rowSelection={{
-            selectedRowKeys: selectedRowKeysUnallocate,
-            ...rowSelectionUnallocate,
-          }}
-          columns={unAllocateColumns}
-          request={async (params: any, sorter: any, filter: any) => {
-            // 表单搜索项会从 params 传入，传递给后端接口。
-            const body = await getRoleUnallocate(params, sorter, filter);
-            if (body !== undefined) {
-              return Promise.resolve({
-                data: body.data.content,
-                success: true,
-                total: body.data.total_size,
-              });
-            }
-            return Promise.resolve({
-              data: [],
-              success: true,
-            });
-          }}
-          pagination={{
-            defaultPageSize: defaultPageSize,
-            showQuickJumper: true,
-            showSizeChanger: true,
-          }}
-          search={
-            showSearch
-              ? {
-                  defaultCollapsed: false,
-                  searchText: "搜索",
-                }
-              : false
-          }
-          dateFormatter="string"
-          actionRef={unallocateActionRef}
-          toolbar={{
-            actions: [],
-            settings: [],
-          }}
-        />
+        <Form
+          form={roleFormRef}
+          onFinish={executeModifyUserRole}
+          layout="vertical"
+        >
+          <Form.Item label="姓名" name="nick_name">
+            <Input disabled />
+          </Form.Item>
+
+          <Form.Item label="角色" name="role_id">
+            <Select options={roleValue} />
+          </Form.Item>
+        </Form>
       </Modal>
     </PageContainer>
   );

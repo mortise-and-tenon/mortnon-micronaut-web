@@ -37,6 +37,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { useRef, useState } from "react";
+import SkeletonModal from "@/app/_modules/SkeletonModal";
 
 //查询表格数据API
 const queryAPI = "/api/projects/tree";
@@ -287,8 +288,12 @@ export default function Project() {
   //是否展示修改对话框
   const [isShowModifyDataModal, setIsShowModifyDataModal] = useState(false);
 
+  //编辑框加载状态
+  const [editLoading,setEditLoading] = useState(true);
+
   //展示修改对话框
   const onClickShowRowModifyModal = (record: any) => {
+    setEditLoading(true);
     queryRowData(record);
     setIsShowModifyDataModal(true);
   };
@@ -322,6 +327,8 @@ export default function Project() {
             status: body.data.status,
             description: body.data.description,
           });
+
+          setEditLoading(false);
         }
       }
     }
@@ -601,65 +608,71 @@ export default function Project() {
         submitTimeout={2000}
         onFinish={executeModifyData}
       >
-        <ProForm.Group>
-          <ProFormTreeSelect
-            width="md"
-            name="parent_id"
-            label="上级部门"
-            placeholder="请选择上级部门"
-            rules={[{ required: true, message: "请选择上级部门" }]}
-            request={getDeptList}
-            fieldProps={{
-              filterTreeNode: true,
-              showSearch: true,
-              treeNodeFilterProp: "label",
-              fieldNames: {
-                label: "name",
-                value: "id",
-              },
-            }}
-          />
-          <ProFormText
-            width="md"
-            name="name"
-            label="部门名称"
-            placeholder="请输入部门名称"
-            rules={[{ required: true, message: "请输入部门名称" }]}
-          />
-        </ProForm.Group>
-        <ProForm.Group>
-          <ProFormDigit
-            fieldProps={{ precision: 0 }}
-            width="md"
-            name="order"
-            initialValue="1"
-            label="排序"
-            placeholder="请输入排序"
-            rules={[{ required: true, message: "请输入排序" }]}
-          />
-          <ProFormRadio.Group
-            name="status"
-            width="sm"
-            label="状态"
-            initialValue={true}
-            options={[
-              {
-                label: "正常",
-                value: true,
-              },
-              {
-                label: "停用",
-                value: false,
-              },
-            ]}
-          />
-          <ProFormTextArea
-            name="description"
-            width={688}
-            label="备注"
-            placeholder="请输入内容"
-          />
-        </ProForm.Group>
+        {editLoading ? (
+          <SkeletonModal />
+        ) : (
+          <>
+            <ProForm.Group>
+              <ProFormTreeSelect
+                width="md"
+                name="parent_id"
+                label="上级部门"
+                placeholder="请选择上级部门"
+                rules={[{ required: true, message: "请选择上级部门" }]}
+                request={getDeptList}
+                fieldProps={{
+                  filterTreeNode: true,
+                  showSearch: true,
+                  treeNodeFilterProp: "label",
+                  fieldNames: {
+                    label: "name",
+                    value: "id",
+                  },
+                }}
+              />
+              <ProFormText
+                width="md"
+                name="name"
+                label="部门名称"
+                placeholder="请输入部门名称"
+                rules={[{ required: true, message: "请输入部门名称" }]}
+              />
+            </ProForm.Group>
+            <ProForm.Group>
+              <ProFormDigit
+                fieldProps={{ precision: 0 }}
+                width="md"
+                name="order"
+                initialValue="1"
+                label="排序"
+                placeholder="请输入排序"
+                rules={[{ required: true, message: "请输入排序" }]}
+              />
+              <ProFormRadio.Group
+                name="status"
+                width="sm"
+                label="状态"
+                initialValue={true}
+                options={[
+                  {
+                    label: "正常",
+                    value: true,
+                  },
+                  {
+                    label: "停用",
+                    value: false,
+                  },
+                ]}
+              />
+              <ProFormTextArea
+                name="description"
+                width={688}
+                label="备注"
+                placeholder="请输入内容"
+              />
+            </ProForm.Group>
+          </>
+        )}
       </ModalForm>
     </PageContainer>
   );

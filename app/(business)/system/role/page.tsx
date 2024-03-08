@@ -79,41 +79,6 @@ export default function Role() {
       order: 2,
     },
     {
-      title: "状态",
-      dataIndex: "status",
-      valueType: "select",
-      width: 96,
-      render: (_, record) => {
-        return (
-          <Space>
-            <Tag
-              color={record.status ? "green" : "red"}
-              icon={
-                record.status ? (
-                  <FontAwesomeIcon icon={faCheck} />
-                ) : (
-                  <FontAwesomeIcon icon={faXmark} />
-                )
-              }
-            >
-              {_}
-            </Tag>
-          </Space>
-        );
-      },
-      valueEnum: {
-        true: {
-          text: "正常",
-          status: true,
-        },
-        false: {
-          text: "停用",
-          status: false,
-        },
-      },
-      order: 1,
-    },
-    {
       title: "备注",
       dataIndex: "description",
       ellipsis: true,
@@ -139,7 +104,7 @@ export default function Role() {
               icon={<FontAwesomeIcon icon={faPenToSquare} />}
               onClick={() => onClickShowRowModifyModal(record)}
             >
-              修改
+              编辑
             </Button>,
             <Button
               key="deleteBtn"

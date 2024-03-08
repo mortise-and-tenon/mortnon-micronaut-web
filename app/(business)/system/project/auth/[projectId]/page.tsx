@@ -14,6 +14,7 @@ import {
   ProForm,
   ProFormTreeSelect,
   ProFormText,
+  ProDescriptions,
 } from "@ant-design/pro-components";
 
 import {
@@ -150,6 +151,19 @@ export default function ProjectAuth({
     },
   ];
 
+  //当前组织信息
+  const [projectData, setProjectData] = useState({} as any);
+
+  //查询当前组织信息
+  const queryProjectData = async () => {
+    const body = await fetchApi(`/api/projects/${projectId}`, push);
+    if (body !== undefined) {
+      setProjectData(body.data);
+    }
+  };
+
+  useEffect;
+
   //查询部门关联用户数据
   const getProjectAllocate = async (params: any, sorter: any, filter: any) => {
     const searchParams = {
@@ -190,6 +204,7 @@ export default function ProjectAuth({
   const defaultPageSize = 10;
 
   useEffect(() => {
+    queryProjectData();
     getDeptList();
   }, []);
 
@@ -291,6 +306,15 @@ export default function ProjectAuth({
         },
       }}
     >
+      <ProDescriptions column={2}>
+        <ProDescriptions.Item label="部门名称">
+          {projectData.name}
+        </ProDescriptions.Item>
+        <ProDescriptions.Item label="备注">
+          {projectData.description}
+        </ProDescriptions.Item>
+      </ProDescriptions>
+
       <ProTable
         formRef={formRef}
         rowKey="id"

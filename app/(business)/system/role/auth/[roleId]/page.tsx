@@ -7,7 +7,11 @@ import type {
   ProColumns,
   ProFormInstance,
 } from "@ant-design/pro-components";
-import { PageContainer, ProTable } from "@ant-design/pro-components";
+import {
+  PageContainer,
+  ProTable,
+  ProDescriptions,
+} from "@ant-design/pro-components";
 
 import { Button, Form, Input, message, Modal, Select, Space, Tag } from "antd";
 import { useRouter } from "next/navigation";
@@ -130,8 +134,20 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
   ];
 
   useEffect(() => {
-    queryRole();
+    queryRoleList();
+    queryCurrentRole();
   }, []);
+
+  //当前角色数据
+  const [roleData, setRoleData] = useState({} as any);
+
+  //查询当前角色数据
+  const queryCurrentRole = async () => {
+    const body = await fetchApi(`/api/roles/${roleId}`, push);
+    if (body !== undefined) {
+      setRoleData(body.data);
+    }
+  };
 
   //查询角色授权数据
   const getRoleAllocate = async (params: any, sorter: any, filter: any) => {
@@ -176,7 +192,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
   const [roleValue, setRoleValue] = useState([] as Array<OptionType>);
 
   //查询角色信息
-  const queryRole = async () => {
+  const queryRoleList = async () => {
     const body = await fetchApi("/api/roles", push);
     if (body !== undefined) {
       const roleArray: Array<OptionType> = new Array<OptionType>();
@@ -263,6 +279,20 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
         },
       }}
     >
+      <ProDescriptions column={2}>
+        <ProDescriptions.Item label="角色名称">
+          {roleData.name}
+        </ProDescriptions.Item>
+        <ProDescriptions.Item label="标识符">
+          {roleData.identifier}
+        </ProDescriptions.Item>
+      </ProDescriptions>
+      <ProDescriptions column={2}>
+      <ProDescriptions.Item label="备注">
+          {roleData.description}
+        </ProDescriptions.Item>
+      </ProDescriptions>
+
       <ProTable
         formRef={formRef}
         rowKey="id"

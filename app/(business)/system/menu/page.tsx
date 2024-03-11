@@ -36,9 +36,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { IconMap } from "@/app/_modules/definies";
-import { useRef, useState } from "react";
+import { IconMap, UserPermission } from "@/app/_modules/definies";
+import { useContext, useRef, useState } from "react";
 import SkeletonModal from "@/app/_modules/SkeletonModal";
+import { GlobalContext } from "@/app/_modules/globalProvider";
 
 //查询表格数据API
 const queryAPI = "/api/menus";
@@ -53,6 +54,9 @@ const deleteAPI = "/api/menus";
 
 export default function Menu() {
   const { push } = useRouter();
+
+  //全局的权限数据
+  const { globalPermission } = useContext(GlobalContext);
 
   //表格列定义
   const columns: ProColumns[] = [
@@ -130,33 +134,37 @@ export default function Menu() {
       title: "操作",
       key: "option",
       search: false,
-      render: (_, record) => [
-        <Button
-          key="modifyBtn"
-          type="link"
-          icon={<FontAwesomeIcon icon={faPenToSquare} />}
-          onClick={() => onClickShowRowModifyModal(record)}
-        >
-          编辑
-        </Button>,
-        <Button
-          key="newBtn"
-          type="link"
-          icon={<PlusOutlined />}
-          onClick={() => onClickAdd(record)}
-        >
-          新建
-        </Button>,
-        <Button
-          key="deleteBtn"
-          type="link"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => onClickDeleteRow(record)}
-        >
-          删除
-        </Button>,
-      ],
+      render: (_, record) => {
+        if (globalPermission.includes(UserPermission.MENU_UPDATE)) {
+          return [
+            <Button
+              key="modifyBtn"
+              type="link"
+              icon={<FontAwesomeIcon icon={faPenToSquare} />}
+              onClick={() => onClickShowRowModifyModal(record)}
+            >
+              编辑
+            </Button>,
+            <Button
+              key="newBtn"
+              type="link"
+              icon={<PlusOutlined />}
+              onClick={() => onClickAdd(record)}
+            >
+              新建
+            </Button>,
+            <Button
+              key="deleteBtn"
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onClickDeleteRow(record)}
+            >
+              删除
+            </Button>,
+          ];
+        }
+      },
     },
   ];
 
@@ -186,12 +194,11 @@ export default function Menu() {
 
     const body = await fetchApi(`${queryAPI}?${queryParams}`, push);
 
-    if (body === undefined) {
-      return [];
-    }
-
-    if (!body.success) {
-      return message.error(body.message);
+    if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return undefined;
+      }
     }
 
     body.data.forEach((first: any) => {
@@ -278,7 +285,7 @@ export default function Menu() {
   const [isShowModifyDataModal, setIsShowModifyDataModal] = useState(false);
 
   //修改框加载状态
-  const [editLoading,setEditLoading] = useState(true);
+  const [editLoading, setEditLoading] = useState(true);
 
   //展示修改对话框
   const onClickShowRowModifyModal = (record: any) => {
@@ -319,6 +326,8 @@ export default function Menu() {
             status: body.data.status,
           });
           setEditLoading(false);
+        } else {
+          message.error(body.message);
         }
       }
     }
@@ -389,6 +398,11 @@ export default function Menu() {
   const getMenuList = async () => {
     const body = await fetchApi(queryAPI, push);
     if (body !== undefined) {
+      if(!body.success){
+        message.error(body.message);
+        return [];
+      }
+      
       body.data.forEach((first: any) => {
         getChildren(first);
       });
@@ -491,111 +505,113 @@ export default function Menu() {
         actionRef={actionTableRef}
         toolbar={{
           actions: [
-            <ModalForm
-              key="addmodal"
-              title="添加菜单"
-              open={showAddModal}
-              trigger={
-                <Button icon={<PlusOutlined />} type="primary">
-                  新建
-                </Button>
-              }
-              autoFocusFirstInput
-              modalProps={{
-                destroyOnClose: true,
-                onCancel: () => {
-                  cancelAddModal();
-                },
-              }}
-              submitTimeout={2000}
-              onFinish={executeAddData}
-            >
-              <ProForm.Group>
-                <ProFormTreeSelect
-                  width="md"
-                  name="parent_id"
-                  initialValue={rowParentId}
-                  label="上级菜单"
-                  placeholder="请选择上级菜单"
-                  rules={[{ required: true, message: "请选择上级菜单" }]}
-                  request={getMenuList}
-                  fieldProps={{
-                    filterTreeNode: true,
-                    showSearch: true,
-                    treeNodeFilterProp: "label",
-                    fieldNames: {
-                      label: "name",
-                      value: "id",
-                    },
-                  }}
-                />
-              </ProForm.Group>
+            globalPermission.includes(UserPermission.MENU_UPDATE) && (
+              <ModalForm
+                key="addmodal"
+                title="添加菜单"
+                open={showAddModal}
+                trigger={
+                  <Button icon={<PlusOutlined />} type="primary">
+                    新建
+                  </Button>
+                }
+                autoFocusFirstInput
+                modalProps={{
+                  destroyOnClose: true,
+                  onCancel: () => {
+                    cancelAddModal();
+                  },
+                }}
+                submitTimeout={2000}
+                onFinish={executeAddData}
+              >
+                <ProForm.Group>
+                  <ProFormTreeSelect
+                    width="md"
+                    name="parent_id"
+                    initialValue={rowParentId}
+                    label="上级菜单"
+                    placeholder="请选择上级菜单"
+                    rules={[{ required: true, message: "请选择上级菜单" }]}
+                    request={getMenuList}
+                    fieldProps={{
+                      filterTreeNode: true,
+                      showSearch: true,
+                      treeNodeFilterProp: "label",
+                      fieldNames: {
+                        label: "name",
+                        value: "id",
+                      },
+                    }}
+                  />
+                </ProForm.Group>
 
-              <ProForm.Group>
-                <ProFormSelect
-                  width="md"
-                  name="icon"
-                  label="菜单图标"
-                  fieldProps={{
-                    showSearch,
-                  }}
-                  valueEnum={IconData}
-                  placeholder="请选择菜单图标"
-                  rules={[{ required: true, message: "请选择菜单图标" }]}
-                />
-                <ProFormText
-                  width="md"
-                  name="name"
-                  label="菜单名称"
-                  placeholder="请输入菜单名称"
-                  rules={[{ required: true, message: "请输入菜单名称" }]}
-                />
-              </ProForm.Group>
+                <ProForm.Group>
+                  <ProFormSelect
+                    width="md"
+                    name="icon"
+                    label="菜单图标"
+                    fieldProps={{
+                      showSearch,
+                    }}
+                    valueEnum={IconData}
+                    placeholder="请选择菜单图标"
+                    rules={[{ required: true, message: "请选择菜单图标" }]}
+                  />
+                  <ProFormText
+                    width="md"
+                    name="name"
+                    label="菜单名称"
+                    placeholder="请输入菜单名称"
+                    rules={[{ required: true, message: "请输入菜单名称" }]}
+                  />
+                </ProForm.Group>
 
-              <ProForm.Group>
-                <ProFormDigit
-                  fieldProps={{ precision: 0 }}
-                  width="md"
-                  name="order"
-                  initialValue="1"
-                  label="排序"
-                  placeholder="请输入排序"
-                  rules={[{ required: true, message: "请输入排序" }]}
-                />
-                <ProFormText
-                  width="md"
-                  name="url"
-                  label="路由地址"
-                  placeholder="请输入路由地址"
-                  rules={[{ required: true, message: "请输入路由地址" }]}
-                />
-              </ProForm.Group>
+                <ProForm.Group>
+                  <ProFormDigit
+                    fieldProps={{ precision: 0 }}
+                    width="md"
+                    name="order"
+                    initialValue="1"
+                    label="排序"
+                    placeholder="请输入排序"
+                    rules={[{ required: true, message: "请输入排序" }]}
+                  />
+                  <ProFormText
+                    width="md"
+                    name="url"
+                    label="路由地址"
+                    placeholder="请输入路由地址"
+                    rules={[{ required: true, message: "请输入路由地址" }]}
+                  />
+                </ProForm.Group>
 
-              <ProForm.Group>
-                <ProFormText
-                  width="md"
-                  name="permission"
-                  label="权限字符"
-                  placeholder="请输入权限字符"
-                />
-                <ProFormRadio.Group
-                  name="status"
-                  width="md"
-                  label="菜单状态"
-                  initialValue={true}
-                  options={[
-                    {
-                      label: "启用",
-                      value: true,
-                    },
-                    {
-                      label: "停用",
-                      value: false,
-                    },
-                  ]}
-                />
-              </ProForm.Group>
-            </ModalForm>,
+                <ProForm.Group>
+                  <ProFormText
+                    width="md"
+                    name="permission"
+                    label="权限字符"
+                    placeholder="请输入权限字符"
+                  />
+                  <ProFormRadio.Group
+                    name="status"
+                    width="md"
+                    label="菜单状态"
+                    initialValue={true}
+                    options={[
+                      {
+                        label: "启用",
+                        value: true,
+                      },
+                      {
+                        label: "停用",
+                        value: false,
+                      },
+                    ]}
+                  />
+                </ProForm.Group>
+              </ModalForm>
+            ),
             <Button
               key="expand"
               icon={<FontAwesomeIcon icon={faArrowsUpDown} />}

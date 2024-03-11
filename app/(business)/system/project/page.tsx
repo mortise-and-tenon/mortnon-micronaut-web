@@ -36,8 +36,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import SkeletonModal from "@/app/_modules/SkeletonModal";
+import { GlobalContext } from "@/app/_modules/globalProvider";
+import { UserPermission } from "@/app/_modules/definies";
 
 //查询表格数据API
 const queryAPI = "/api/projects/tree";
@@ -53,6 +55,9 @@ const deleteAPI = "/api/projects";
 export default function Project() {
   const { push } = useRouter();
 
+  //全局的权限数据
+  const { globalPermission } = useContext(GlobalContext);
+
   //表格列定义
   const columns: ProColumns[] = [
     {
@@ -63,10 +68,12 @@ export default function Project() {
       dataIndex: "name",
       order: 2,
       render: (text, record) => {
-        return (
+        return globalPermission.includes(UserPermission.USER_ASSIGNMENT) ? (
           <a onClick={() => push(`/system/project/auth/${record.id}`)}>
             {text}
           </a>
+        ) : (
+          <span>{text}</span>
         );
       },
     },
@@ -94,53 +101,55 @@ export default function Project() {
       key: "option",
       search: false,
       render: (_, record) => {
-        if (record.id == 1) {
-          return [
-            <Button
-              key="modifyBtn"
-              type="link"
-              icon={<FontAwesomeIcon icon={faPenToSquare} />}
-              onClick={() => onClickShowRowModifyModal(record)}
-            >
-              编辑
-            </Button>,
-            <Button
-              key="newBtn"
-              type="link"
-              icon={<PlusOutlined />}
-              onClick={() => onClickAdd(record)}
-            >
-              新建
-            </Button>,
-          ];
-        } else {
-          return [
-            <Button
-              key="modifyBtn"
-              type="link"
-              icon={<FontAwesomeIcon icon={faPenToSquare} />}
-              onClick={() => onClickShowRowModifyModal(record)}
-            >
-              编辑
-            </Button>,
-            <Button
-              key="newBtn"
-              type="link"
-              icon={<PlusOutlined />}
-              onClick={() => onClickAdd(record)}
-            >
-              新建
-            </Button>,
-            <Button
-              key="deleteBtn"
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => onClickDeleteRow(record)}
-            >
-              删除
-            </Button>,
-          ];
+        if (globalPermission.includes(UserPermission.PROJECT_UPDATE)) {
+          if (record.id == 1) {
+            return [
+              <Button
+                key="modifyBtn"
+                type="link"
+                icon={<FontAwesomeIcon icon={faPenToSquare} />}
+                onClick={() => onClickShowRowModifyModal(record)}
+              >
+                编辑
+              </Button>,
+              <Button
+                key="newBtn"
+                type="link"
+                icon={<PlusOutlined />}
+                onClick={() => onClickAdd(record)}
+              >
+                新建
+              </Button>,
+            ];
+          } else {
+            return [
+              <Button
+                key="modifyBtn"
+                type="link"
+                icon={<FontAwesomeIcon icon={faPenToSquare} />}
+                onClick={() => onClickShowRowModifyModal(record)}
+              >
+                编辑
+              </Button>,
+              <Button
+                key="newBtn"
+                type="link"
+                icon={<PlusOutlined />}
+                onClick={() => onClickAdd(record)}
+              >
+                新建
+              </Button>,
+              <Button
+                key="deleteBtn"
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => onClickDeleteRow(record)}
+              >
+                删除
+              </Button>,
+            ];
+          }
         }
       },
     },
@@ -171,6 +180,15 @@ export default function Project() {
     });
 
     const body = await fetchApi(`${queryAPI}?${queryParams}`, push);
+
+    if (body === undefined) {
+      return undefined;
+    } else {
+      if (!body.success) {
+        message.error(body.message);
+        return undefined;
+      }
+    }
 
     const dataArray = body.data;
 
@@ -304,6 +322,8 @@ export default function Project() {
           });
 
           setEditLoading(false);
+        } else {
+          message.error(body.message);
         }
       }
     }
@@ -374,6 +394,10 @@ export default function Project() {
   const getDeptList = async () => {
     const body = await fetchApi(queryAPI, push);
     if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return [];
+      }
       body.data.forEach((item: any) => {
         parseChild(item);
       });
@@ -453,87 +477,89 @@ export default function Project() {
         actionRef={actionTableRef}
         toolbar={{
           actions: [
-            <ModalForm
-              key="addmodal"
-              title="添加部门"
-              open={showAddModal}
-              trigger={
-                <Button icon={<PlusOutlined />} type="primary">
-                  新建
-                </Button>
-              }
-              autoFocusFirstInput
-              modalProps={{
-                destroyOnClose: true,
-                onCancel: () => {
-                  cancelAddModal();
-                },
-              }}
-              submitTimeout={2000}
-              onFinish={executeAddData}
-            >
-              <ProForm.Group>
-                <ProFormTreeSelect
-                  width="md"
-                  name="parent_id"
-                  initialValue={rowParentId}
-                  label="上级部门"
-                  placeholder="请选择上级部门"
-                  rules={[{ required: true, message: "请选择上级部门" }]}
-                  request={getDeptList}
-                  fieldProps={{
-                    filterTreeNode: true,
-                    showSearch: true,
-                    treeNodeFilterProp: "label",
-                    fieldNames: {
-                      label: "name",
-                      value: "id",
-                    },
-                  }}
+            globalPermission.includes(UserPermission.PROJECT_UPDATE) && (
+              <ModalForm
+                key="addmodal"
+                title="添加部门"
+                open={showAddModal}
+                trigger={
+                  <Button icon={<PlusOutlined />} type="primary">
+                    新建
+                  </Button>
+                }
+                autoFocusFirstInput
+                modalProps={{
+                  destroyOnClose: true,
+                  onCancel: () => {
+                    cancelAddModal();
+                  },
+                }}
+                submitTimeout={2000}
+                onFinish={executeAddData}
+              >
+                <ProForm.Group>
+                  <ProFormTreeSelect
+                    width="md"
+                    name="parent_id"
+                    initialValue={rowParentId}
+                    label="上级部门"
+                    placeholder="请选择上级部门"
+                    rules={[{ required: true, message: "请选择上级部门" }]}
+                    request={getDeptList}
+                    fieldProps={{
+                      filterTreeNode: true,
+                      showSearch: true,
+                      treeNodeFilterProp: "label",
+                      fieldNames: {
+                        label: "name",
+                        value: "id",
+                      },
+                    }}
+                  />
+                  <ProFormText
+                    width="md"
+                    name="name"
+                    autoFocus
+                    label="部门名称"
+                    placeholder="请输入部门名称"
+                    rules={[{ required: true, message: "请输入部门名称" }]}
+                  />
+                </ProForm.Group>
+                <ProForm.Group>
+                  <ProFormDigit
+                    fieldProps={{ precision: 0 }}
+                    width="md"
+                    name="order"
+                    initialValue="1"
+                    label="排序"
+                    placeholder="请输入排序"
+                    rules={[{ required: true, message: "请输入排序" }]}
+                  />
+                  <ProFormRadio.Group
+                    name="status"
+                    width="sm"
+                    label="状态"
+                    initialValue={true}
+                    options={[
+                      {
+                        label: "正常",
+                        value: true,
+                      },
+                      {
+                        label: "停用",
+                        value: false,
+                      },
+                    ]}
+                  />
+                </ProForm.Group>
+                <ProFormTextArea
+                  name="description"
+                  width={688}
+                  label="备注"
+                  placeholder="请输入内容"
                 />
-                <ProFormText
-                  width="md"
-                  name="name"
-                  autoFocus
-                  label="部门名称"
-                  placeholder="请输入部门名称"
-                  rules={[{ required: true, message: "请输入部门名称" }]}
-                />
-              </ProForm.Group>
-              <ProForm.Group>
-                <ProFormDigit
-                  fieldProps={{ precision: 0 }}
-                  width="md"
-                  name="order"
-                  initialValue="1"
-                  label="排序"
-                  placeholder="请输入排序"
-                  rules={[{ required: true, message: "请输入排序" }]}
-                />
-                <ProFormRadio.Group
-                  name="status"
-                  width="sm"
-                  label="状态"
-                  initialValue={true}
-                  options={[
-                    {
-                      label: "正常",
-                      value: true,
-                    },
-                    {
-                      label: "停用",
-                      value: false,
-                    },
-                  ]}
-                />
-              </ProForm.Group>
-              <ProFormTextArea
-                name="description"
-                width={688}
-                label="备注"
-                placeholder="请输入内容"
-              />
-            </ModalForm>,
+              </ModalForm>
+            ),
             <Button
               key="expand"
               icon={<FontAwesomeIcon icon={faArrowsUpDown} />}

@@ -63,8 +63,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import SkeletonModal from "@/app/_modules/SkeletonModal";
+import { GlobalContext } from "@/app/_modules/globalProvider";
+import { UserPermission } from "@/app/_modules/definies";
 
 type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
 
@@ -77,6 +79,9 @@ export type OptionType = {
 
 export default function User() {
   const { push } = useRouter();
+
+  //全局的权限数据
+  const { globalPermission } = useContext(GlobalContext);
 
   //新建用户预置密码值
   const [defaultPassword, setDefaultPassword] = useState("");
@@ -199,7 +204,10 @@ export default function User() {
       key: "option",
       search: false,
       render: (_, record) => {
-        if (record.id != 1)
+        if (
+          record.id != 1 &&
+          globalPermission.includes(UserPermission.USER_UDPATE)
+        )
           return [
             <Button
               key="modifyBtn"
@@ -235,7 +243,7 @@ export default function User() {
                     ),
                     icon: <KeyOutlined />,
                   },
-                  {
+                  globalPermission.includes(UserPermission.USER_ASSIGNMENT) && {
                     key: "2",
                     label: (
                       <a
@@ -411,6 +419,10 @@ export default function User() {
     const body = await fetchApi(`/api/users?${queryParams}`, push);
 
     if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return undefined;
+      }
       body.data.content.forEach((row: any) => {
         setRowStatusMap({ ...rowStatusMap, [row.id]: row.status });
       });
@@ -459,10 +471,10 @@ export default function User() {
     });
 
     if (body !== undefined) {
-      if (body.code == 200) {
-        message.success(body.msg);
+      if (body.success) {
+        message.success("修改状态成功");
       } else {
-        message.error(body.msg);
+        message.error(body.message);
         erroCallback();
       }
     }
@@ -518,6 +530,10 @@ export default function User() {
   const queryOrgTree = async () => {
     const body = await fetchApi("/api/projects/tree", push);
     if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return;
+      }
       const tree = generateOrgTree(body.data);
       setOrgTreeData(tree);
       setSearchValue("");
@@ -527,8 +543,16 @@ export default function User() {
 
   //查询角色信息
   const queryRole = async () => {
+    if (!globalPermission.includes(UserPermission.ROLE_QUERY)) {
+      return;
+    }
+
     const body = await fetchApi("/api/roles", push);
     if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return;
+      }
       const roleArray: Array<OptionType> = new Array<OptionType>();
       body.data.content.forEach((role: any) => {
         const option: OptionType = {
@@ -691,6 +715,8 @@ export default function User() {
           });
 
           setEditLoading(false);
+        } else {
+          message.error(body.message);
         }
       }
     }
@@ -947,156 +973,161 @@ export default function User() {
             actionRef={actionRef}
             toolbar={{
               actions: [
-                <ModalForm
-                  key="addmodal"
-                  title="添加用户"
-                  trigger={
-                    <Button icon={<PlusOutlined />} type="primary">
-                      新建
-                    </Button>
-                  }
-                  autoFocusFirstInput
-                  modalProps={{
-                    destroyOnClose: true,
-                  }}
-                  submitTimeout={2000}
-                  onFinish={executeAddUser}
-                >
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="nick_name"
-                      label="姓名"
-                      placeholder="请输入姓名"
-                      rules={[{ required: true, message: "请输入姓名" }]}
-                    />
-                    <ProFormRadio.Group
-                      name="sex"
-                      width="md"
-                      label="性别"
-                      initialValue={1}
-                      options={[
-                        {
-                          label: "男",
-                          value: 1,
-                        },
-                        {
-                          label: "女",
-                          value: 0,
-                        },
-                      ]}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormTreeSelect
-                      width="md"
-                      name="project_id"
-                      label="所属部门"
-                      placeholder="请选择所属部门"
-                      initialValue={
-                        searchProjectId == 0 ? null : searchProjectId
-                      }
-                      rules={[{ required: true, message: "请选择所属部门" }]}
-                      request={async () => {
-                        return orgSelectData;
-                      }}
-                      fieldProps={{
-                        filterTreeNode: true,
-                        treeNodeFilterProp: "title",
-                        fieldNames: {
-                          label: "title",
-                          value: "key",
-                        },
-                      }}
-                    />
-                    <ProFormSelect
-                      width="md"
-                      name="role_id"
-                      label="角色"
-                      placeholder="请选择角色"
-                      rules={[{ required: true, message: "请选择角色" }]}
-                      options={roleValue}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="user_name"
-                      label="用户名"
-                      placeholder="请输入用户名"
-                      rules={[{ required: true, message: "请输入用户名" }]}
-                    />
-                    <ProFormRadio.Group
-                      name="status"
-                      width="sm"
-                      label="状态"
-                      initialValue={true}
-                      options={[
-                        {
-                          label: "启用",
-                          value: true,
-                        },
-                        {
-                          label: "停用",
-                          value: false,
-                        },
-                      ]}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText.Password
-                      width="md"
-                      name="password"
-                      label="密码"
-                      initialValue={defaultPassword}
-                      placeholder="请输入密码"
-                      rules={[{ required: true, message: "请输入密码" }]}
-                    />
-                    <ProFormText.Password
-                      width="md"
-                      name="repeat_password"
-                      label="确认密码"
-                      initialValue={defaultPassword}
-                      placeholder="请再次输入密码"
-                      rules={[
-                        { required: true, message: "请再次输入密码" },
-                        ({ getFieldValue }) => ({
-                          validator(_, value) {
-                            if (!value || getFieldValue("password") === value) {
-                              return Promise.resolve();
-                            }
-                            return Promise.reject(
-                              new Error("两次密码输入不一致")
-                            );
+                globalPermission.includes(UserPermission.USER_UDPATE) && (
+                  <ModalForm
+                    key="addmodal"
+                    title="添加用户"
+                    trigger={
+                      <Button icon={<PlusOutlined />} type="primary">
+                        新建
+                      </Button>
+                    }
+                    autoFocusFirstInput
+                    modalProps={{
+                      destroyOnClose: true,
+                    }}
+                    submitTimeout={2000}
+                    onFinish={executeAddUser}
+                  >
+                    <ProForm.Group>
+                      <ProFormText
+                        width="md"
+                        name="nick_name"
+                        label="姓名"
+                        placeholder="请输入姓名"
+                        rules={[{ required: true, message: "请输入姓名" }]}
+                      />
+                      <ProFormRadio.Group
+                        name="sex"
+                        width="md"
+                        label="性别"
+                        initialValue={1}
+                        options={[
+                          {
+                            label: "男",
+                            value: 1,
                           },
-                        }),
-                      ]}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      width="md"
-                      name="phone"
-                      label="手机号码"
-                      placeholder="请输入手机号码"
-                      rules={[
-                        {
-                          pattern: /^1\d{10}$/,
-                          message: "请输入正确的手机号码",
-                        },
-                      ]}
-                    />
-                    <ProFormText
-                      width="md"
-                      name="email"
-                      label="邮箱"
-                      placeholder="请输入邮箱"
-                      rules={[
-                        { type: "email", message: "请输入正确的邮箱地址" },
-                      ]}
-                    />
-                  </ProForm.Group>
-                </ModalForm>,
+                          {
+                            label: "女",
+                            value: 0,
+                          },
+                        ]}
+                      />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormTreeSelect
+                        width="md"
+                        name="project_id"
+                        label="所属部门"
+                        placeholder="请选择所属部门"
+                        initialValue={
+                          searchProjectId == 0 ? null : searchProjectId
+                        }
+                        rules={[{ required: true, message: "请选择所属部门" }]}
+                        request={async () => {
+                          return orgSelectData;
+                        }}
+                        fieldProps={{
+                          filterTreeNode: true,
+                          treeNodeFilterProp: "title",
+                          fieldNames: {
+                            label: "title",
+                            value: "key",
+                          },
+                        }}
+                      />
+                      <ProFormSelect
+                        width="md"
+                        name="role_id"
+                        label="角色"
+                        placeholder="请选择角色"
+                        rules={[{ required: true, message: "请选择角色" }]}
+                        options={roleValue}
+                      />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormText
+                        width="md"
+                        name="user_name"
+                        label="用户名"
+                        placeholder="请输入用户名"
+                        rules={[{ required: true, message: "请输入用户名" }]}
+                      />
+                      <ProFormRadio.Group
+                        name="status"
+                        width="sm"
+                        label="状态"
+                        initialValue={true}
+                        options={[
+                          {
+                            label: "启用",
+                            value: true,
+                          },
+                          {
+                            label: "停用",
+                            value: false,
+                          },
+                        ]}
+                      />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormText.Password
+                        width="md"
+                        name="password"
+                        label="密码"
+                        initialValue={defaultPassword}
+                        placeholder="请输入密码"
+                        rules={[{ required: true, message: "请输入密码" }]}
+                      />
+                      <ProFormText.Password
+                        width="md"
+                        name="repeat_password"
+                        label="确认密码"
+                        initialValue={defaultPassword}
+                        placeholder="请再次输入密码"
+                        rules={[
+                          { required: true, message: "请再次输入密码" },
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              if (
+                                !value ||
+                                getFieldValue("password") === value
+                              ) {
+                                return Promise.resolve();
+                              }
+                              return Promise.reject(
+                                new Error("两次密码输入不一致")
+                              );
+                            },
+                          }),
+                        ]}
+                      />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormText
+                        width="md"
+                        name="phone"
+                        label="手机号码"
+                        placeholder="请输入手机号码"
+                        rules={[
+                          {
+                            pattern: /^1\d{10}$/,
+                            message: "请输入正确的手机号码",
+                          },
+                        ]}
+                      />
+                      <ProFormText
+                        width="md"
+                        name="email"
+                        label="邮箱"
+                        placeholder="请输入邮箱"
+                        rules={[
+                          { type: "email", message: "请输入正确的邮箱地址" },
+                        ]}
+                      />
+                    </ProForm.Group>
+                  </ModalForm>
+                ),
                 <ModalForm
                   key="modifymodal"
                   title="修改用户"
@@ -1175,24 +1206,27 @@ export default function User() {
                     </>
                   )}
                 </ModalForm>,
-
-                <Button
-                  key="danger"
-                  danger
-                  icon={<DeleteOutlined />}
-                  disabled={!rowCanDelete}
-                  onClick={() => onClickDeleteRow()}
-                >
-                  删除
-                </Button>,
-                <Button
-                  key="import"
-                  type="primary"
-                  icon={<FontAwesomeIcon icon={faUpload} />}
-                  onClick={onClickImport}
-                >
-                  导入
-                </Button>,
+                globalPermission.includes(UserPermission.USER_UDPATE) && (
+                  <Button
+                    key="danger"
+                    danger
+                    icon={<DeleteOutlined />}
+                    disabled={!rowCanDelete}
+                    onClick={() => onClickDeleteRow()}
+                  >
+                    删除
+                  </Button>
+                ),
+                globalPermission.includes(UserPermission.USER_UDPATE) && (
+                  <Button
+                    key="import"
+                    type="primary"
+                    icon={<FontAwesomeIcon icon={faUpload} />}
+                    onClick={onClickImport}
+                  >
+                    导入
+                  </Button>
+                ),
               ],
               settings: [
                 {

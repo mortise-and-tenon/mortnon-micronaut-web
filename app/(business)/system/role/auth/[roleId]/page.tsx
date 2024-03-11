@@ -25,7 +25,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { GlobalContext } from "@/app/_modules/globalProvider";
+import { UserPermission } from "@/app/_modules/definies";
 
 export type OptionType = {
   label: string;
@@ -34,6 +36,9 @@ export type OptionType = {
 
 export default function RoleAuth({ params }: { params: { roleId: number } }) {
   const { push } = useRouter();
+
+  //全局的权限数据
+  const { globalPermission } = useContext(GlobalContext);
 
   const roleId = params.roleId;
 
@@ -118,7 +123,10 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
       key: "option",
       search: false,
       render: (_, record) => {
-        if (record.id != 1)
+        if (
+          record.id != 1 &&
+          globalPermission.includes(UserPermission.USER_ASSIGNMENT)
+        )
           return [
             <Button
               key="deleteBtn"
@@ -174,6 +182,10 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
     const body = await fetchApi(`/api/assignment?${queryParams}`, push);
 
     if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return;
+      }
       return body;
     }
   };
@@ -195,6 +207,11 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
   const queryRoleList = async () => {
     const body = await fetchApi("/api/roles", push);
     if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return;
+      }
+
       const roleArray: Array<OptionType> = new Array<OptionType>();
       body.data.content.forEach((role: any) => {
         const option: OptionType = {
@@ -288,7 +305,7 @@ export default function RoleAuth({ params }: { params: { roleId: number } }) {
         </ProDescriptions.Item>
       </ProDescriptions>
       <ProDescriptions column={2}>
-      <ProDescriptions.Item label="备注">
+        <ProDescriptions.Item label="备注">
           {roleData.description}
         </ProDescriptions.Item>
       </ProDescriptions>

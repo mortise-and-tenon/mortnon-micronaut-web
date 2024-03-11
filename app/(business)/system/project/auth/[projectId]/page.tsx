@@ -189,8 +189,13 @@ export default function ProjectAuth({
     const body = await fetchApi(`/api/assignment?${queryParams}`, push);
 
     if (body !== undefined) {
-      return body;
+      if (!body.success) {
+        message.error(body.message);
+        return undefined;
+      }
     }
+
+    return body;
   };
 
   //搜索栏显示状态

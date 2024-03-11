@@ -352,5 +352,32 @@ export const MortnonCronLocalization: CronLocalization = {
         label2: "到",
       },
     },
-  }
+  },
+};
+
+//基础权限
+export const UserPermission = {
+  //维护用户数据
+  USER_UDPATE: "USER_UPDATE",
+
+  //维护用户角色组织数据
+  USER_ASSIGNMENT: "USER_ASSIGNMENT",
+
+  //用户查询
+  ROLE_QUERY: "ROLE_QUERY",
+
+  //更新角色
+  ROLE_UPDATE: "ROLE_UPDATE",
+
+  //部门查询
+  PROJECT_QUERY: "PROJECT_QUERY",
+
+  //维护部门
+  PROJECT_UPDATE: "PROJECT_UPDATE",
+
+  //查询菜单
+  MENU_QUERY: "MENU_QUERY",
+
+  //维护菜单数据
+  MENU_UPDATE: "MENU_UPDATE",
 };

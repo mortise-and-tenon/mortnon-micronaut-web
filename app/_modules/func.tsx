@@ -13,30 +13,25 @@ export async function fetchApi(url: string, push: any, options?: RequestInit) {
   };
 
   try {
-    const response = await fetch(url, requestOptions);
-    if (response.status == 401) {
-      push("/login");
-      return;
-    }
-    if (response.status == 403) {
-      return {
-        success: false,
-        message: "无权限访问",
-      };
-    }
-    const body = await response.json();
-    return body;
+    return await fetch(url, requestOptions).then((response) => {
+      if (response.status == 401) {
+        push("/login");
+        return;
+      }
+      if (response.status == 403) {
+        return {
+          success: false,
+          message: "无权限访问",
+        };
+      }
+      return response.json();
+    });
   } catch (error) {
     console.log("fetch error:", error);
   }
 }
 
-export async function fetchFile(
-  url: string,
-  push: any,
-  fileName: string
-) {
-
+export async function fetchFile(url: string, push: any, fileName: string) {
   const requestHeader = {
     credentials: "include",
   };

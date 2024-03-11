@@ -197,6 +197,13 @@ export default function OperLog() {
     });
 
     const body = await fetchApi(`/api/logs?${queryParams}`, push);
+    if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return undefined;
+      }
+    }
+
     return body;
   };
 

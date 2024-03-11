@@ -34,7 +34,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
+import { GlobalContext } from "@/app/_modules/globalProvider";
+import { UserPermission } from "@/app/_modules/definies";
 
 //查询表格数据API
 const queryAPI = "/api/roles";
@@ -54,6 +56,9 @@ const exportFilePrefix = "角色";
 export default function Role() {
   const { push } = useRouter();
 
+  //全局的权限数据
+  const { globalPermission } = useContext(GlobalContext);
+
   //表格列定义
   const columns: ProColumns[] = [
     {
@@ -68,8 +73,10 @@ export default function Role() {
       sorter: true,
       order: 3,
       render: (text, record) => {
-        return (
+        return globalPermission.includes(UserPermission.USER_ASSIGNMENT) ? (
           <a onClick={() => push(`/system/role/auth/${record.id}`)}>{text}</a>
+        ) : (
+          <span>{text}</span>
         );
       },
     },
@@ -98,7 +105,10 @@ export default function Role() {
       key: "option",
       search: false,
       render: (_, record) => {
-        if (record.id != 1)
+        if (
+          record.id != 1 &&
+          globalPermission.includes(UserPermission.ROLE_UPDATE)
+        )
           return [
             <Button
               key="modifyBtn"
@@ -116,7 +126,7 @@ export default function Role() {
               onClick={() => onClickDeleteRow(record)}
             >
               删除
-            </Button>
+            </Button>,
           ];
       },
     },
@@ -145,6 +155,13 @@ export default function Role() {
     });
 
     const body = await fetchApi(`${queryAPI}?${queryParams}`, push);
+
+    if (body !== undefined) {
+      if (!body.success) {
+        message.error(body.message);
+        return undefined;
+      }
+    }
 
     return body;
   };
@@ -216,6 +233,8 @@ export default function Role() {
             description: body.data.description,
             permissions: body.data.permissions.map((item: any) => item.id),
           });
+        } else {
+          message.error(body.message);
         }
       }
     }
@@ -302,6 +321,8 @@ export default function Role() {
     if (body !== undefined) {
       if (body.success) {
         return body.data.content;
+      }else{
+        message.error(body.message);
       }
     }
 
@@ -347,160 +368,164 @@ export default function Role() {
         actionRef={actionTableRef}
         toolbar={{
           actions: [
-            <ModalForm
-              key="addmodal"
-              title="添加角色"
-              trigger={
-                <Button icon={<PlusOutlined />} type="primary">
-                  新建
-                </Button>
-              }
-              autoFocusFirstInput
-              modalProps={{
-                destroyOnClose: true,
-              }}
-              submitTimeout={2000}
-              onFinish={executeAddData}
-            >
-              <ProForm.Group>
-                <ProFormText
-                  width="md"
-                  name="name"
-                  autoFocus
-                  label="角色名称"
-                  placeholder="请输入角色名称"
-                  rules={[{ required: true, message: "请输入角色名称" }]}
+            globalPermission.includes(UserPermission.ROLE_UPDATE) && (
+              <ModalForm
+                key="addmodal"
+                title="添加角色"
+                trigger={
+                  <Button icon={<PlusOutlined />} type="primary">
+                    新建
+                  </Button>
+                }
+                autoFocusFirstInput
+                modalProps={{
+                  destroyOnClose: true,
+                }}
+                submitTimeout={2000}
+                onFinish={executeAddData}
+              >
+                <ProForm.Group>
+                  <ProFormText
+                    width="md"
+                    name="name"
+                    autoFocus
+                    label="角色名称"
+                    placeholder="请输入角色名称"
+                    rules={[{ required: true, message: "请输入角色名称" }]}
+                  />
+                  <ProFormText
+                    width="md"
+                    name="identifier"
+                    label="角色标识值"
+                    placeholder="请输入角色标识值"
+                    rules={[{ required: true, message: "请输入角色标识值" }]}
+                  />
+                </ProForm.Group>
+                <ProForm.Group>
+                  <ProFormTreeSelect
+                    width="md"
+                    name="permissions"
+                    label="权限"
+                    request={async () => {
+                      return getPermissionList();
+                    }}
+                    fieldProps={{
+                      placement: "topRight",
+                      filterTreeNode: true,
+                      showSearch: true,
+                      multiple: true,
+                      treeCheckable: true,
+                      treeNodeFilterProp: "label",
+                      fieldNames: {
+                        label: "name",
+                        value: "id",
+                      },
+                    }}
+                  />
+                  <ProFormRadio.Group
+                    name="status"
+                    width="sm"
+                    label="状态"
+                    initialValue={true}
+                    options={[
+                      {
+                        label: "正常",
+                        value: true,
+                      },
+                      {
+                        label: "停用",
+                        value: false,
+                      },
+                    ]}
+                  />
+                </ProForm.Group>
+                <ProFormTextArea
+                  name="description"
+                  width={688}
+                  label="备注"
+                  placeholder="请输入内容"
                 />
-                <ProFormText
-                  width="md"
-                  name="identifier"
-                  label="角色标识值"
-                  placeholder="请输入角色标识值"
-                  rules={[{ required: true, message: "请输入角色标识值" }]}
+              </ModalForm>
+            ),
+            globalPermission.includes(UserPermission.ROLE_UPDATE) && (
+              <ModalForm
+                key="modifymodal"
+                title="修改角色"
+                formRef={modifyFormRef}
+                open={isShowModifyDataModal}
+                autoFocusFirstInput
+                modalProps={{
+                  destroyOnClose: true,
+                  onCancel: () => {
+                    setIsShowModifyDataModal(false);
+                  },
+                }}
+                submitTimeout={2000}
+                onFinish={executeModifyData}
+              >
+                <ProForm.Group>
+                  <ProFormText
+                    width="md"
+                    name="name"
+                    autoFocus
+                    label="角色名称"
+                    placeholder="请输入角色名称"
+                    rules={[{ required: true, message: "请输入角色名称" }]}
+                  />
+                  <ProFormText
+                    width="md"
+                    name="identifier"
+                    autoFocus
+                    label="角色标识值"
+                    readonly
+                  />
+                </ProForm.Group>
+                <ProForm.Group>
+                  <ProFormTreeSelect
+                    width="md"
+                    name="permissions"
+                    label="权限"
+                    request={async () => {
+                      return getPermissionList();
+                    }}
+                    fieldProps={{
+                      placement: "topRight",
+                      filterTreeNode: true,
+                      showSearch: true,
+                      multiple: true,
+                      treeCheckable: true,
+                      treeNodeFilterProp: "label",
+                      fieldNames: {
+                        label: "name",
+                        value: "id",
+                      },
+                    }}
+                  />
+                  <ProFormRadio.Group
+                    name="status"
+                    width="sm"
+                    label="状态"
+                    initialValue={true}
+                    options={[
+                      {
+                        label: "正常",
+                        value: true,
+                      },
+                      {
+                        label: "停用",
+                        value: false,
+                      },
+                    ]}
+                  />
+                </ProForm.Group>
+                <ProFormTextArea
+                  name="description"
+                  width={688}
+                  label="备注"
+                  placeholder="请输入内容"
                 />
-              </ProForm.Group>
-              <ProForm.Group>
-                <ProFormTreeSelect
-                  width="md"
-                  name="permissions"
-                  label="权限"
-                  request={async () => {
-                    return getPermissionList();
-                  }}
-                  fieldProps={{
-                    placement: "topRight",
-                    filterTreeNode: true,
-                    showSearch: true,
-                    multiple: true,
-                    treeCheckable: true,
-                    treeNodeFilterProp: "label",
-                    fieldNames: {
-                      label: "name",
-                      value: "id",
-                    },
-                  }}
-                />
-                <ProFormRadio.Group
-                  name="status"
-                  width="sm"
-                  label="状态"
-                  initialValue={true}
-                  options={[
-                    {
-                      label: "正常",
-                      value: true,
-                    },
-                    {
-                      label: "停用",
-                      value: false,
-                    },
-                  ]}
-                />
-              </ProForm.Group>
-              <ProFormTextArea
-                name="description"
-                width={688}
-                label="备注"
-                placeholder="请输入内容"
-              />
-            </ModalForm>,
-            <ModalForm
-              key="modifymodal"
-              title="修改角色"
-              formRef={modifyFormRef}
-              open={isShowModifyDataModal}
-              autoFocusFirstInput
-              modalProps={{
-                destroyOnClose: true,
-                onCancel: () => {
-                  setIsShowModifyDataModal(false);
-                },
-              }}
-              submitTimeout={2000}
-              onFinish={executeModifyData}
-            >
-              <ProForm.Group>
-                <ProFormText
-                  width="md"
-                  name="name"
-                  autoFocus
-                  label="角色名称"
-                  placeholder="请输入角色名称"
-                  rules={[{ required: true, message: "请输入角色名称" }]}
-                />
-                <ProFormText
-                  width="md"
-                  name="identifier"
-                  autoFocus
-                  label="角色标识值"
-                  readonly
-                />
-              </ProForm.Group>
-              <ProForm.Group>
-                <ProFormTreeSelect
-                  width="md"
-                  name="permissions"
-                  label="权限"
-                  request={async () => {
-                    return getPermissionList();
-                  }}
-                  fieldProps={{
-                    placement: "topRight",
-                    filterTreeNode: true,
-                    showSearch: true,
-                    multiple: true,
-                    treeCheckable: true,
-                    treeNodeFilterProp: "label",
-                    fieldNames: {
-                      label: "name",
-                      value: "id",
-                    },
-                  }}
-                />
-                <ProFormRadio.Group
-                  name="status"
-                  width="sm"
-                  label="状态"
-                  initialValue={true}
-                  options={[
-                    {
-                      label: "正常",
-                      value: true,
-                    },
-                    {
-                      label: "停用",
-                      value: false,
-                    },
-                  ]}
-                />
-              </ProForm.Group>
-              <ProFormTextArea
-                name="description"
-                width={688}
-                label="备注"
-                placeholder="请输入内容"
-              />
-            </ModalForm>,
+              </ModalForm>
+            ),
           ],
           settings: [
             {

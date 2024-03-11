@@ -1,32 +1,28 @@
 "use client";
 import {
   ChromeFilled,
-  ExclamationCircleFilled,
-  GithubOutlined,
-  HomeOutlined,
-  LogoutOutlined,
+  ExclamationCircleFilled, FullscreenExitOutlined, FullscreenOutlined, GithubOutlined, LogoutOutlined,
   MenuOutlined,
   QuestionCircleFilled,
   SearchOutlined,
-  UserOutlined,
-  FullscreenOutlined,
-  FullscreenExitOutlined,
+  UserOutlined
 } from "@ant-design/icons";
 import { ProConfigProvider, ProLayout } from "@ant-design/pro-components";
-import { Dropdown, Select, MenuProps, Modal, Tooltip, Input } from "antd";
 import type { SelectProps } from "antd";
+import { Dropdown, MenuProps, Modal, Select, Tooltip } from "antd";
 import { deleteCookie, getCookie } from "cookies-next";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { IconMap, RouteInfo, UserInfo } from "../_modules/definies";
 import "./styles.css";
 
 import {
   displayModeIsDark,
   fetchApi,
-  watchDarkModeChange,
+  watchDarkModeChange
 } from "../_modules/func";
+import { GlobalContext } from "../_modules/globalProvider";
 
 export default function RootLayout({
   children,
@@ -102,13 +98,12 @@ export default function RootLayout({
   } as UserInfo);
 
   //获取用户信息
-  const getProfile = (user:any) => {
-
+  const getProfile = (user: any) => {
     if (user !== undefined) {
       const userInfo: UserInfo = {
         nickName: user.user_name,
         avatar:
-        user.avatar === null
+          user.avatar === null
             ? user.sex === "1"
               ? "/avatar1.jpeg"
               : "/avatar0.jpeg"
@@ -119,6 +114,9 @@ export default function RootLayout({
     }
   };
 
+  //用于设置全局的权限数据
+  const { setGlobalPermission } = useContext(GlobalContext);
+
   //缓存的菜单数据
   const [menuData, setMenuData] = useState<any[]>([]);
 
@@ -126,12 +124,14 @@ export default function RootLayout({
   const getRoutes = async () => {
     const body = await fetchApi("/api/profile", push);
 
-
-    if(body === undefined){
+    if (body === undefined) {
       return;
     }
 
     getProfile(body.data.user);
+
+    //设置当前用户全局的权限值
+    setGlobalPermission(body.data.permission);
 
     const rootChildren: Array<RouteInfo> = new Array<RouteInfo>();
     //搜索用的菜单列表

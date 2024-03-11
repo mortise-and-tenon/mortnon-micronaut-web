@@ -50,7 +50,6 @@ export default function RootLayout({
       redirectToLogin();
       return;
     }
-    getProfile();
 
     setIsDark(displayModeIsDark());
     const unsubscribe = watchDarkModeChange((matches: boolean) => {
@@ -98,23 +97,22 @@ export default function RootLayout({
 
   //用户昵称
   const [userInfo, setUserInfo] = useState({
-    nickName: "Monrtnon",
-    avatar: "/avatar1.jpeg",
+    nickName: "--",
+    avatar: "/avatar0.jpeg",
   } as UserInfo);
 
   //获取用户信息
-  const getProfile = async () => {
-    const body = await fetchApi("/api/profile/user", push);
+  const getProfile = (user:any) => {
 
-    if (body !== undefined) {
+    if (user !== undefined) {
       const userInfo: UserInfo = {
-        nickName: body.data.user_name,
+        nickName: user.user_name,
         avatar:
-          body.data.avatar === null
-            ? body.data.sex === "1"
+        user.avatar === null
+            ? user.sex === "1"
               ? "/avatar1.jpeg"
               : "/avatar0.jpeg"
-            : "/api" + body.data.avatar,
+            : "/api" + user.avatar,
       };
 
       setUserInfo(userInfo);
@@ -126,13 +124,21 @@ export default function RootLayout({
 
   //获取菜单
   const getRoutes = async () => {
-    const body = await fetchApi("/api/profile/menus", push);
+    const body = await fetchApi("/api/profile", push);
+
+
+    if(body === undefined){
+      return;
+    }
+
+    getProfile(body.data.user);
+
     const rootChildren: Array<RouteInfo> = new Array<RouteInfo>();
     //搜索用的菜单列表
     const searchMenuList: any[] = [];
 
-    if (body.data && body.data.length > 0) {
-      body.data
+    if (body.data.menu && body.data.menu.length > 0) {
+      body.data.menu
         .sort((a: any, b: any) => a.order - b.order)
         .forEach((menu: any) => {
           const route: RouteInfo = {

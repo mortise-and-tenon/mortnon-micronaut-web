@@ -141,14 +141,14 @@ export default function Profile() {
 
   const uploadAvatar = async (options: any) => {
     const formData = new FormData();
-    formData.append("avatarfile", options.file);
-    const body = await fetchApi("/api/system/user/profile/avatar", push, {
+    formData.append("file", options.file);
+    const body = await fetchApi("/api/profile/avatar", push, {
       method: "POST",
       body: formData,
     });
     if (body.success) {
       message.success("上传头像成功");
-      setImageUrl("/api" + body.imgUrl);
+      setImageUrl("/api" + body.data);
     } else {
       message.error(body.message);
     }

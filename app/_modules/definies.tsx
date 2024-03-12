@@ -81,13 +81,12 @@ export type UserInfo = {
 
 //用户详细信息
 export type UserDetailInfo = {
-  userName: string;
-  phonenumber: string;
+  user_name: string;
+  phone: string;
   email: string;
   deptName: string;
-  postGroup: string;
   roleName: string;
-  nickName: string;
+  nick_name: string;
   sex: number | string;
   createTime: string;
 };

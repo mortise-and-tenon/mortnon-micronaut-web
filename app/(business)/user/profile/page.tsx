@@ -58,24 +58,34 @@ export default function Profile() {
 
   //获取用户profile
   const getProfile = async () => {
-    const body = await fetchApi("/api/system/user/profile", push);
+    const body = await fetchApi("/api/profile", push);
     if (body !== undefined) {
-      const data = body.data;
+      if (!body.success) {
+        message.error(body.message);
+        return;
+      }
+
+      const data = body.data.user;
       const userData: UserDetailInfo = {
-        userName: data.userName,
-        phonenumber: data.phonenumber,
+        user_name: data.user_name,
+        nick_name: data.nick_name,
+        phone: data.phone,
         email: data.email,
-        deptName: data.dept.deptName,
-        postGroup: body.postGroup,
-        roleName: data.roles[0].roleName,
-        nickName: data.nickName,
+        deptName:
+          data.project_roles.length > 0
+            ? data.project_roles[0].project_name ?? ""
+            : "",
+        roleName:
+          data.project_roles.length > 0
+            ? data.project_roles[0].role_name ?? ""
+            : "",
         sex: data.sex,
-        createTime: data.createTime,
+        createTime: data.gmt_create,
       };
 
       setUser(userData);
       setImageUrl(
-        data.avatar === ""
+        data.avatar === "" || data.avatar === null
           ? userData.sex === "1"
             ? "/avatar1.jpeg"
             : "/avatar0.jpeg"
@@ -100,8 +110,8 @@ export default function Profile() {
 
   //更新用户基本信息
   const updateProfile = async (values: any) => {
-    const body = await fetchApi("/api/system/user/profile", push, {
-      method: "PUT",
+    const body = await fetchApi("/api/profile", push, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
@@ -114,16 +124,17 @@ export default function Profile() {
   //修改用户密码
   const updatePassword = async (values: any) => {
     const params = {
-      oldPassword: values.oldPassword,
-      newPassword: values.newPassword,
+      old_password: values.old_password,
+      password: values.password,
+      repeat_password: values.repeat_password,
     };
-    const body = await fetchApi(
-      `/api/system/user/profile/updatePwd?${new URLSearchParams(params)}`,
-      push,
-      {
-        method: "PUT",
-      }
-    );
+    const body = await fetchApi(`/api/profile/password`, push, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(params),
+    });
 
     return body;
   };
@@ -135,29 +146,31 @@ export default function Profile() {
       method: "POST",
       body: formData,
     });
-    if (body.code == 200) {
+    if (body.success) {
       message.success("上传头像成功");
       setImageUrl("/api" + body.imgUrl);
     } else {
-      message.error(body.msg);
+      message.error(body.message);
     }
   };
 
   const executeUpdateProfile = async (values: any) => {
     const body = await updateProfile(values);
-    if (body.code == 200) {
-      message.success("修改成功");
+    if (body.success) {
+      message.success("修改成功，刷新页面更新数据");
     } else {
-      message.error(body.msg);
+      message.error(body.message);
     }
   };
 
   const executeUpdatePassword = async (values: any) => {
     const body = await updatePassword(values);
-    if (body.code == 200) {
-      message.success("修改成功");
-    } else {
-      message.error(body.msg);
+    if (body !== undefined) {
+      if (body.success) {
+        message.success("修改成功");
+        return;
+      }
+      message.error(body.message);
     }
   };
 
@@ -187,24 +200,22 @@ export default function Profile() {
         >
           <ProFormText
             width="md"
-            name="nickName"
-            label="用户昵称"
-            placeholder="请输入用户昵称"
-            rules={[{ required: true, message: "请输入用户昵称" }]}
+            name="nick_name"
+            label="姓名"
+            placeholder="请输入姓名"
+            rules={[{ required: true, message: "请输入姓名" }]}
           />
           <ProFormText
             width="md"
-            name="phonenumber"
+            name="phone"
             label="手机号"
             placeholder="请输入手机号"
-            rules={[{ required: true, message: "请输入手机号" }]}
           />
           <ProFormText
             name="email"
             width="md"
             label="邮箱"
             placeholder="请输入邮箱"
-            rules={[{ required: true, message: "请输入邮箱" }]}
           />
           <ProFormRadio.Group
             name="sex"
@@ -213,11 +224,11 @@ export default function Profile() {
             options={[
               {
                 label: "男",
-                value: "0",
+                value: 0,
               },
               {
                 label: "女",
-                value: "1",
+                value: 1,
               },
             ]}
             rules={[{ required: true, message: "请选择性别" }]}
@@ -252,28 +263,28 @@ export default function Profile() {
         >
           <ProFormText.Password
             width="md"
-            name="oldPassword"
+            name="old_password"
             label="当前密码"
             placeholder="请输入当前密码"
             rules={[{ required: true, message: "请输入当前密码" }]}
           />
           <ProFormText.Password
             width="md"
-            name="newPassword"
+            name="password"
             label="新密码"
             placeholder="请输入新密码"
             rules={[{ required: true, message: "请输入新密码" }]}
           />
           <ProFormText.Password
             width="md"
-            name="repeatPassword"
+            name="repeat_password"
             label="确认新密码"
             placeholder="请再次输入新密码"
             rules={[
               { required: true, message: "请再次输入新密码" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
-                  if (!value || getFieldValue("newPassword") === value) {
+                  if (!value || getFieldValue("password") === value) {
                     return Promise.resolve();
                   }
                   return Promise.reject(new Error("新密码两次输入不一致"));
@@ -346,7 +357,7 @@ export default function Profile() {
                 </>
               }
             >
-              {user.userName}
+              {user.user_name}
             </ProDescriptions.Item>
             <ProDescriptions.Item
               label={
@@ -356,7 +367,7 @@ export default function Profile() {
                 </>
               }
             >
-              {user.phonenumber}
+              {user.phone}
             </ProDescriptions.Item>
             <ProDescriptions.Item
               label={
@@ -376,7 +387,7 @@ export default function Profile() {
                 </>
               }
             >
-              {user.deptName}/{user.postGroup}
+              {user.deptName}
             </ProDescriptions.Item>
             <ProDescriptions.Item
               label={

@@ -178,7 +178,7 @@ export default function RootLayout({
     }
 
     //如果当前访问的页面不在用户权限内，跳转403页面
-    if(!userMenu.includes(pathname)){
+    if(!userMenu.includes(pathname) && pathname !== "/user/profile"){
       push("/error/forbidden");
     }
 

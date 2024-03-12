@@ -1,14 +1,20 @@
 "use client";
 
-import React, { createContext, SetStateAction, useState,Dispatch } from "react";
+import React, {
+  createContext, Dispatch, SetStateAction,
+  useState
+} from "react";
 
 type GlobalContextType = {
-    globalPermission:Array<string>,
-    setGlobalPermission:Dispatch<SetStateAction<Array<string>>>,
+  globalPermission: Array<string>;
+  setGlobalPermission: Dispatch<SetStateAction<Array<string>>>;
 };
 
 // 全局的用户权限值
-export const GlobalContext = createContext<GlobalContextType>({globalPermission:[],setGlobalPermission:()=>{}});
+export const GlobalContext = createContext<GlobalContextType>({
+  globalPermission: [],
+  setGlobalPermission: () => {},
+});
 
 export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
   const [globalPermission, setGlobalPermission] = useState([] as Array<string>);

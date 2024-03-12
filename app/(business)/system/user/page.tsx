@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchApi, fetchFile } from "@/app/_modules/func";
+import { fetchApi } from "@/app/_modules/func";
 import {
   CaretDownOutlined,
   CheckOutlined,
@@ -27,7 +27,6 @@ import {
   ProFormRadio,
   ProFormSelect,
   ProFormText,
-  ProFormTextArea,
   ProFormTreeSelect,
   ProTable,
 } from "@ant-design/pro-components";
@@ -43,18 +42,17 @@ import {
   message,
   Modal,
   Row,
+  Select,
   Space,
   Spin,
   Switch,
   Tree,
   Typography,
   Upload,
-  Select,
 } from "antd";
 import { useRouter } from "next/navigation";
 
 import {
-  faDownload,
   faPenToSquare,
   faToggleOff,
   faToggleOn,
@@ -63,10 +61,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import SkeletonModal from "@/app/_modules/SkeletonModal";
-import { GlobalContext } from "@/app/_modules/globalProvider";
 import { UserPermission } from "@/app/_modules/definies";
+import { GlobalContext } from "@/app/_modules/globalProvider";
+import SkeletonModal from "@/app/_modules/SkeletonModal";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
 
@@ -81,7 +79,7 @@ export default function User() {
   const { push } = useRouter();
 
   //全局的权限数据
-  const { globalPermission } = useContext(GlobalContext);
+  const { globalPermission, userMenu } = useContext(GlobalContext);
 
   //新建用户预置密码值
   const [defaultPassword, setDefaultPassword] = useState("");

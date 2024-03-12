@@ -1,11 +1,15 @@
 "use client";
 import {
   ChromeFilled,
-  ExclamationCircleFilled, FullscreenExitOutlined, FullscreenOutlined, GithubOutlined, LogoutOutlined,
+  ExclamationCircleFilled,
+  FullscreenExitOutlined,
+  FullscreenOutlined,
+  GithubOutlined,
+  LogoutOutlined,
   MenuOutlined,
   QuestionCircleFilled,
   SearchOutlined,
-  UserOutlined
+  UserOutlined,
 } from "@ant-design/icons";
 import { ProConfigProvider, ProLayout } from "@ant-design/pro-components";
 import type { SelectProps } from "antd";
@@ -20,7 +24,7 @@ import "./styles.css";
 import {
   displayModeIsDark,
   fetchApi,
-  watchDarkModeChange
+  watchDarkModeChange,
 } from "../_modules/func";
 import { GlobalContext } from "../_modules/globalProvider";
 
@@ -115,10 +119,13 @@ export default function RootLayout({
   };
 
   //用于设置全局的权限数据
-  const { setGlobalPermission } = useContext(GlobalContext);
+  const { setGlobalPermission} = useContext(GlobalContext);
 
   //缓存的菜单数据
   const [menuData, setMenuData] = useState<any[]>([]);
+
+  //当前用户菜单key
+  const userMenu:string[] = [];
 
   //获取菜单
   const getRoutes = async () => {
@@ -132,6 +139,8 @@ export default function RootLayout({
 
     //设置当前用户全局的权限值
     setGlobalPermission(body.data.permission);
+
+    const userMenu: any[] = [];
 
     const rootChildren: Array<RouteInfo> = new Array<RouteInfo>();
     //搜索用的菜单列表
@@ -152,12 +161,25 @@ export default function RootLayout({
               ),
           };
 
+          userMenu.push(menu.url);
+
           if (menu.children && menu.children.length > 0) {
-            getSubMenu(route, menu.children, route.name, searchMenuList);
+            getSubMenu(
+              route,
+              menu.children,
+              route.name,
+              searchMenuList,
+              userMenu
+            );
           }
 
           rootChildren.push(route);
         });
+    }
+
+    //如果当前访问的页面不在用户权限内，跳转403页面
+    if(!userMenu.includes(pathname)){
+      push("/error/forbidden");
     }
 
     const bookHub: RouteInfo = {
@@ -176,7 +198,8 @@ export default function RootLayout({
     parent: RouteInfo,
     menuChildren: any,
     parentName: any,
-    searchMenuList: any[]
+    searchMenuList: any[],
+    userMenu: any[]
   ) => {
     const routeChildren: Array<RouteInfo> = new Array<RouteInfo>();
 
@@ -194,6 +217,8 @@ export default function RootLayout({
             ),
         };
 
+        userMenu.push(menu.url);
+
         routeChildren.push(route);
 
         if (menu.children && menu.children.length > 0) {
@@ -201,7 +226,8 @@ export default function RootLayout({
             route,
             menu.children,
             parentName + " > " + route.name,
-            searchMenuList
+            searchMenuList,
+            userMenu
           );
         } else {
           searchMenuList.push({

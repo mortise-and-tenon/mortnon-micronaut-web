@@ -79,13 +79,18 @@ export default function User() {
   const { push } = useRouter();
 
   //全局的权限数据
-  const { globalPermission, userMenu } = useContext(GlobalContext);
+  const { globalPermission } = useContext(GlobalContext);
+
+  //是否展示组织
+  const showProject = globalPermission.includes(UserPermission.PROJECT_QUERY);
 
   //新建用户预置密码值
   const [defaultPassword, setDefaultPassword] = useState("");
 
   useEffect(() => {
-    queryOrgTree();
+    if (showProject) {
+      queryOrgTree();
+    }
     queryRole();
   }, []);
 
@@ -440,7 +445,7 @@ export default function User() {
         record.user_name
       }"用户吗？`,
       onOk() {
-        executeSwitchStatus(checked, record.userId, () => {
+        executeSwitchStatus(checked, record.id, () => {
           setRowStatusMap({ ...rowStatusMap, [record.id]: !checked });
         });
       },
@@ -457,10 +462,10 @@ export default function User() {
     erroCallback: () => void
   ) => {
     const modifyData = {
-      userId: userId,
-      status: checked ? "0" : "1",
+      user_id: userId,
+      status: checked,
     };
-    const body = await fetchApi(`/api/system/user/changeStatus`, push, {
+    const body = await fetchApi(`/api/users/status`, push, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -470,7 +475,7 @@ export default function User() {
 
     if (body !== undefined) {
       if (body.success) {
-        message.success("修改状态成功");
+        message.success("修改用户状态成功");
       } else {
         message.error(body.message);
         erroCallback();
@@ -905,31 +910,34 @@ export default function User() {
   return (
     <PageContainer title={false}>
       <Row gutter={{ xs: 8, sm: 8, md: 8 }}>
-        <Col xs={24} sm={8} md={6}>
-          <ProCard>
-            <Input
-              style={{ marginBottom: 16 }}
-              placeholder="输入部门名称搜索"
-              prefix={<SearchOutlined />}
-              onChange={onSearchDept}
-            />
-            {filterOrgTree.length > 0 ? (
-              <Flex>
-                <Tree
-                  switcherIcon={<CaretDownOutlined />}
-                  defaultExpandAll
-                  onSelect={selectOrgData}
-                  treeData={filterOrgTree}
-                />
-              </Flex>
-            ) : (
-              <Flex justify="center" style={{ marginTop: "16px" }}>
-                <Spin />
-              </Flex>
-            )}
-          </ProCard>
-        </Col>
-        <Col xs={24} sm={16} md={18}>
+        {showProject && (
+          <Col xs={24} sm={8} md={6}>
+            <ProCard>
+              <Input
+                style={{ marginBottom: 16 }}
+                placeholder="输入部门名称搜索"
+                prefix={<SearchOutlined />}
+                onChange={onSearchDept}
+              />
+              {filterOrgTree.length > 0 ? (
+                <Flex>
+                  <Tree
+                    switcherIcon={<CaretDownOutlined />}
+                    defaultExpandAll
+                    onSelect={selectOrgData}
+                    treeData={filterOrgTree}
+                  />
+                </Flex>
+              ) : (
+                <Flex justify="center" style={{ marginTop: "16px" }}>
+                  <Spin />
+                </Flex>
+              )}
+            </ProCard>
+          </Col>
+        )}
+
+        <Col xs={24} sm={showProject ? 16 : 24} md={showProject ? 18 : 24}>
           <ProTable
             formRef={formRef}
             rowKey="id"

@@ -20,7 +20,7 @@ import {
   ProFormRadio,
   ProFormText,
   ProFormTextArea,
-  ProFormTreeSelect,
+  ProFormSelect,
   ProTable,
 } from "@ant-design/pro-components";
 import { Button, Dropdown, message, Modal, Space } from "antd";
@@ -37,6 +37,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useRef, useState } from "react";
 import { GlobalContext } from "@/app/_modules/globalProvider";
 import { UserPermission } from "@/app/_modules/definies";
+import SkeletonModal from "@/app/_modules/SkeletonModal";
 
 //查询表格数据API
 const queryAPI = "/api/roles";
@@ -180,7 +181,7 @@ export default function Role() {
 
     if (body != undefined) {
       if (body.success) {
-        message.success(body.message);
+        message.success("新建成功");
         if (actionTableRef.current) {
           actionTableRef.current.reload();
         }
@@ -198,8 +199,12 @@ export default function Role() {
   //是否展示修改对话框
   const [isShowModifyDataModal, setIsShowModifyDataModal] = useState(false);
 
+  //是否加载编辑数据
+  const [editLoading, setEditLoading] = useState(true);
+
   //展示修改对话框
   const onClickShowRowModifyModal = (record?: any) => {
+    setEditLoading(true);
     queryRowData(record);
     setIsShowModifyDataModal(true);
   };
@@ -233,6 +238,7 @@ export default function Role() {
             description: body.data.description,
             permissions: body.data.permissions.map((item: any) => item.id),
           });
+          setEditLoading(false);
         } else {
           message.error(body.message);
         }
@@ -315,19 +321,22 @@ export default function Role() {
     setPageSize(pageSize);
   };
 
+
   //查询所有权限树
   const getPermissionList = async () => {
     const body = await fetchApi("/api/permissions", push);
     if (body !== undefined) {
       if (body.success) {
         return body.data.content;
-      }else{
+      } else {
         message.error(body.message);
       }
     }
 
     return [];
   };
+
+  const [permissionValue, setPermissionValue] = useState([] as number[]);
 
   return (
     <PageContainer title={false}>
@@ -402,20 +411,17 @@ export default function Role() {
                   />
                 </ProForm.Group>
                 <ProForm.Group>
-                  <ProFormTreeSelect
+                  <ProFormSelect
                     width="md"
                     name="permissions"
                     label="权限"
+                    placeholder="请选择权限"
                     request={async () => {
                       return getPermissionList();
                     }}
                     fieldProps={{
-                      placement: "topRight",
-                      filterTreeNode: true,
-                      showSearch: true,
-                      multiple: true,
-                      treeCheckable: true,
-                      treeNodeFilterProp: "label",
+                      placement: "bottomRight",
+                      mode: "multiple",
                       fieldNames: {
                         label: "name",
                         value: "id",
@@ -463,67 +469,70 @@ export default function Role() {
                 submitTimeout={2000}
                 onFinish={executeModifyData}
               >
-                <ProForm.Group>
-                  <ProFormText
-                    width="md"
-                    name="name"
-                    autoFocus
-                    label="角色名称"
-                    placeholder="请输入角色名称"
-                    rules={[{ required: true, message: "请输入角色名称" }]}
-                  />
-                  <ProFormText
-                    width="md"
-                    name="identifier"
-                    autoFocus
-                    label="角色标识值"
-                    readonly
-                  />
-                </ProForm.Group>
-                <ProForm.Group>
-                  <ProFormTreeSelect
-                    width="md"
-                    name="permissions"
-                    label="权限"
-                    request={async () => {
-                      return getPermissionList();
-                    }}
-                    fieldProps={{
-                      placement: "topRight",
-                      filterTreeNode: true,
-                      showSearch: true,
-                      multiple: true,
-                      treeCheckable: true,
-                      treeNodeFilterProp: "label",
-                      fieldNames: {
-                        label: "name",
-                        value: "id",
-                      },
-                    }}
-                  />
-                  <ProFormRadio.Group
-                    name="status"
-                    width="sm"
-                    label="状态"
-                    initialValue={true}
-                    options={[
-                      {
-                        label: "正常",
-                        value: true,
-                      },
-                      {
-                        label: "停用",
-                        value: false,
-                      },
-                    ]}
-                  />
-                </ProForm.Group>
-                <ProFormTextArea
-                  name="description"
-                  width={688}
-                  label="备注"
-                  placeholder="请输入内容"
-                />
+                {editLoading ? (
+                  <SkeletonModal />
+                ) : (
+                  <>
+                    <ProForm.Group>
+                      <ProFormText
+                        width="md"
+                        name="name"
+                        autoFocus
+                        label="角色名称"
+                        placeholder="请输入角色名称"
+                        rules={[{ required: true, message: "请输入角色名称" }]}
+                      />
+                      <ProFormText
+                        width="md"
+                        name="identifier"
+                        autoFocus
+                        label="角色标识值"
+                        readonly
+                      />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormSelect
+                        width="md"
+                        name="permissions"
+                        label="权限"
+                        placeholder="请选择权限"
+                        request={async () => {
+                          return getPermissionList();
+                        }}
+                        fieldProps={{
+                          placement: "bottomRight",
+                          mode: "multiple",
+                          fieldNames: {
+                            label: "name",
+                            value: "id",
+                          },
+                        }}
+                      />
+                      <ProFormRadio.Group
+                        name="status"
+                        width="sm"
+                        label="状态"
+                        initialValue={true}
+                        options={[
+                          {
+                            label: "正常",
+                            value: true,
+                          },
+                          {
+                            label: "停用",
+                            value: false,
+                          },
+                        ]}
+                      />
+                    </ProForm.Group>
+                    <ProFormTextArea
+                      name="description"
+                      width={688}
+                      label="备注"
+                      placeholder="请输入内容"
+                    />
+                  </>
+                )}
               </ModalForm>
             ),
           ],

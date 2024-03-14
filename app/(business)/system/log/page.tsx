@@ -413,6 +413,16 @@ export default function OperLog() {
             </ProDescriptions.Item>
           </ProDescriptions>
           <ProDescriptions>
+            <ProDescriptions.Item label="请求数据">
+              {selectedRow.request}
+            </ProDescriptions.Item>
+          </ProDescriptions>
+          <ProDescriptions>
+            <ProDescriptions.Item label="响应消息">
+              {selectedRow.message}
+            </ProDescriptions.Item>
+          </ProDescriptions>
+          <ProDescriptions>
             <ProDescriptions.Item label="操作时间">
               {selectedRow.time}
             </ProDescriptions.Item>

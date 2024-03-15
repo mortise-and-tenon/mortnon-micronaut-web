@@ -78,6 +78,11 @@ export default function Project() {
       },
     },
     {
+      title: "标识值",
+      dataIndex: "identifier",
+      search: false,
+    },
+    {
       title: "排序",
       dataIndex: "order",
       width: 48,

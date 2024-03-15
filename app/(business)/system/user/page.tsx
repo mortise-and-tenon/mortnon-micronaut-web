@@ -857,14 +857,10 @@ export default function User() {
     const file = fileList[0];
     const formData = new FormData();
     formData.append("file", file);
-    const body = await fetchApi(
-      `/api/users/import?updateSupport=${uploadSupport}`,
-      push,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
+    const body = await fetchApi(`/api/users/import`, push, {
+      method: "POST",
+      body: formData,
+    });
 
     setUploading(false);
     setUploadSupport(false);
@@ -873,12 +869,21 @@ export default function User() {
       setFileList([]);
       if (body.success) {
         message.success("用户导入成功");
+        setShowImportModal(false);
         //刷新列表
         if (actionRef.current) {
           actionRef.current.reload();
         }
       } else {
-        message.error(body.message);
+        const repeatName = body.data
+          ?.map((item: any) => item.user_name)
+          .join(",");
+        if (repeatName !== undefined) {
+          message.error(body.message + ":" + repeatName);
+        } else {
+          message.error(body.message);
+        }
+        message.error("请检查文件内容");
       }
     }
   };
@@ -1337,7 +1342,7 @@ export default function User() {
         onOk={executeImport}
         onCancel={cancelImportModal}
       >
-        <Flex justify="center">
+        <Flex justify="center" style={{ marginBottom: 30 }}>
           <div>
             <Dragger
               name="file"
@@ -1361,18 +1366,9 @@ export default function User() {
               <p className="ant-upload-hint">仅支持 xls、xlsx 格式文件</p>
             </Dragger>
           </div>
-        </Flex>
-        <Flex justify="center" style={{ marginTop: 30 }}>
-          <Typography.Text>
-            <Checkbox
-              checked={uploadSupport}
-              onChange={(e) => {
-                setUploadSupport(e.target.checked);
-              }}
-            >
-              允许更新已有用户的数据
-            </Checkbox>
-          </Typography.Text>
+          <Flex align="flex-end" style={{ marginLeft: 16 }}>
+            <a href="/api/users/template/usertemplate.xlsx">模板下载</a>
+          </Flex>
         </Flex>
       </Modal>
     </PageContainer>

@@ -82,6 +82,13 @@ export function encrypt(content: string) {
   return encryptor.encrypt(content);
 }
 
+//使用指定key加密数据
+export function encryptWithKey(content: string, key: string) {
+  const encryptor = new JSEncrypt();
+  encryptor.setPublicKey(key);
+  return encryptor.encrypt(content);
+}
+
 //解密数据
 export function decrypt(content: string) {
   const encryptor = new JSEncrypt();

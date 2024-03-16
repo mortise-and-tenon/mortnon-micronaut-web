@@ -6,24 +6,24 @@ import {
   ProFormCheckbox,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Divider, message, Spin, theme, ConfigProvider } from "antd";
-import type { ConfigProviderProps } from "antd";
-import { setCookie, getCookie, deleteCookie } from "cookies-next";
+import { Divider, message, Spin, theme } from "antd";
+import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 
 import type { ProFormInstance } from "@ant-design/pro-components";
 
 import Image from "next/image";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LoginReq } from "../_modules/definies";
 import {
-  encrypt,
   decrypt,
   displayModeIsDark,
+  encrypt,
+  encryptWithKey,
+  fetchApi,
   watchDarkModeChange,
 } from "../_modules/func";
-import { headers } from "@/node_modules/next/headers";
 
 type Captcha = {
   image: string;
@@ -73,6 +73,19 @@ export default function Login() {
     }
   };
 
+  const [loginConfig, setLoginConfig] = useState(undefined as any);
+
+  //获取登录相关配置项
+  const getLoginConfig = async () => {
+    const response = await fetch("/api/system/login/config");
+    if (response.ok) {
+      const body = await response.json();
+      if (body !== undefined) {
+        setLoginConfig(body.data);
+      }
+    }
+  };
+
   //深色模式
   const [isDark, setIsDark] = useState(false);
   //背景图片
@@ -80,6 +93,7 @@ export default function Login() {
 
   useEffect(() => {
     getCaptcha();
+    getLoginConfig();
     readUserNamePassword();
     setIsDark(displayModeIsDark());
     setBackground(displayModeIsDark() ? backgroundDark : backgroudLight);
@@ -96,9 +110,14 @@ export default function Login() {
 
   //提交登录
   const userLogin = async (values: any) => {
+    //如果开启了加密传输，将密码敏感数据加密后再调用api
+    let encryptPwd = values.password;
+    if (loginConfig?.password_encrypt) {
+      encryptPwd = encryptWithKey(encryptPwd, loginConfig?.public_key);
+    }
     const loginData: LoginReq = {
       username: values.username,
-      password: values.password,
+      password: encryptPwd,
       verify_code: values.code,
       verify_key: captcha.key,
     };

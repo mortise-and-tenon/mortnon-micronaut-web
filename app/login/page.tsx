@@ -133,7 +133,7 @@ export default function Login() {
         },
         body: JSON.stringify(loginData),
         credentials: "include",
-      });
+      })
 
       //获得响应
       if (response.ok) {
@@ -160,6 +160,9 @@ export default function Login() {
         const data = await response.json();
 
         message.error(data.message);
+        
+        //异常，自动刷新验证码
+        getCaptcha();
       }
     } catch (error) {
       console.log("error:", error);

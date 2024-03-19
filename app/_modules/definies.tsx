@@ -62,6 +62,8 @@ import {
   faTableCells,
   faThumbtack,
   faUsers,
+  faShield,
+  faWrench
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -155,6 +157,8 @@ export const IconMap: IconType = {
   shop: <ShoppingCartOutlined />,
   sync: <SyncOutlined />,
   wifi: <WifiOutlined />,
+  security: <FontAwesomeIcon icon={faShield} />,
+  setting: <FontAwesomeIcon icon={faWrench} />
 };
 
 //Cron框本地化内容

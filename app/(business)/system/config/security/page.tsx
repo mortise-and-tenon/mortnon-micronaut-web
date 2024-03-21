@@ -9,6 +9,7 @@ import {
   ProFormSelect,
   ProFormTreeSelect,
   ProCard,
+  ProFormDigit,
 } from "@ant-design/pro-components";
 import type { ProFormInstance } from "@ant-design/pro-components";
 
@@ -38,6 +39,8 @@ export default function Config() {
         captcha: body.data.captcha,
         password_encrypt: body.data.password_encrypt,
         double_factor: body.data.double_factor,
+        try_count: body.data.try_count,
+        lock_time: body.data.lock_time,
       });
     }
   };
@@ -55,10 +58,10 @@ export default function Config() {
       },
       body: JSON.stringify(values),
     });
-    if(body !== undefined){
-      if(body.success){
+    if (body !== undefined) {
+      if (body.success) {
         message.success("修改成功");
-      }else{
+      } else {
         message.error(body.message);
       }
     }
@@ -104,6 +107,7 @@ export default function Config() {
               name="password_encrypt"
               width="md"
               label="密码加密"
+              tooltip="登录过程中密码将加密后再传输"
               options={[
                 {
                   label: "加密",
@@ -114,6 +118,24 @@ export default function Config() {
                   value: false,
                 },
               ]}
+            />
+          </ProForm.Group>
+          <ProForm.Group>
+            <ProFormDigit
+              label="允许失败次数"
+              tooltip="0表示无限制"
+              name="try_count"
+              min={0}
+              max={10}
+              fieldProps={{ precision: 0 }}
+            />
+          </ProForm.Group>
+          <ProForm.Group>
+            <ProFormDigit
+              label="失败锁定时间"
+              tooltip="达到允许失败次数时开始锁定"
+              name="lock_time"
+              fieldProps={{ precision: 0, addonAfter: "秒" }}
             />
           </ProForm.Group>
         </ProForm>

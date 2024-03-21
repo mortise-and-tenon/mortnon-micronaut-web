@@ -6,7 +6,7 @@ import {
   ProFormCheckbox,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Divider, message, Spin, theme } from "antd";
+import { Divider, message, Spin, theme, Flex } from "antd";
 import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +24,7 @@ import {
   fetchApi,
   watchDarkModeChange,
 } from "../_modules/func";
+import { time } from "console";
 
 type Captcha = {
   image: string;
@@ -133,7 +134,7 @@ export default function Login() {
         },
         body: JSON.stringify(loginData),
         credentials: "include",
-      })
+      });
 
       //获得响应
       if (response.ok) {
@@ -160,9 +161,14 @@ export default function Login() {
         const data = await response.json();
 
         message.error(data.message);
-        
+
         //异常，自动刷新验证码
         getCaptcha();
+
+        //如果发生锁定，展示锁定倒计时
+        if (data.data && data.data.lock_time) {
+          startLock(data.data.lock_time);
+        }
       }
     } catch (error) {
       console.log("error:", error);
@@ -203,6 +209,44 @@ export default function Login() {
 
   const { token } = theme.useToken();
 
+  //锁定倒计时
+  const [countdown, setCountdown] = useState(0);
+
+  const [isCounting, setIsCounting] = useState(false);
+
+  const frameRef = useRef(0);
+  const startTimeRef = useRef(0);
+
+  const startLock = (time: number) => {
+    if (!isCounting) {
+      setIsCounting(true);
+      setCountdown(time);
+    }
+  };
+
+  useEffect(() => {
+    const animate = (time: number) => {
+      if (startTimeRef.current === 0) {
+        startTimeRef.current = time;
+      }
+
+      const elapsedTime = time - startTimeRef.current;
+
+      if (elapsedTime >= 1000) {
+        startTimeRef.current = time;
+        setCountdown((preCount) => (preCount > 0 ? preCount - 1 : 0));
+      }
+
+      frameRef.current = requestAnimationFrame(animate);
+    };
+
+    if (isCounting) {
+      frameRef.current = requestAnimationFrame(animate);
+    }
+
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [isCounting]);
+
   return (
     <ProConfigProvider dark={isDark}>
       <div
@@ -241,6 +285,14 @@ export default function Login() {
           onFinish={userLogin}
         >
           <Divider>账号密码登录</Divider>
+          {countdown > 0 && (
+            <Flex justify="center">
+              <span style={{ color: "#ff4d4f" }}>
+                登录锁定中，请{countdown}秒后重试
+              </span>
+            </Flex>
+          )}
+
           <>
             <ProFormText
               name="username"
@@ -340,6 +392,13 @@ export default function Login() {
             <ProFormCheckbox noStyle name="autoLogin">
               记住密码
             </ProFormCheckbox>
+            {/* <a
+              style={{
+                float: "right",
+              }}
+            >
+              忘记密码
+            </a> */}
           </div>
         </LoginFormPage>
       </div>

@@ -64,6 +64,7 @@ import {
   faUsers,
   faShield,
   faWrench,
+  faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -159,6 +160,7 @@ export const IconMap: IconType = {
   wifi: <WifiOutlined />,
   security: <FontAwesomeIcon icon={faShield} />,
   setting: <FontAwesomeIcon icon={faWrench} />,
+  lock: <FontAwesomeIcon icon={faLock} />,
 };
 
 //Cron框本地化内容

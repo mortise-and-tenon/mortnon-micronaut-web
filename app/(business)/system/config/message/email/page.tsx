@@ -155,7 +155,7 @@ export default function Config() {
 
   return (
     <PageContainer title={false}>
-      <ProCard title="邮箱配置">
+      <ProCard title="电子邮件">
         {loading ? (
           <SkeletonLoad />
         ) : (

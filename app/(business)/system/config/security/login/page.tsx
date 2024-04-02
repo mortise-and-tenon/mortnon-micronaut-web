@@ -75,7 +75,7 @@ export default function Config() {
 
   return (
     <PageContainer title={false}>
-      <ProCard title="登录安全">
+      <ProCard title="登录认证">
         {loading ? (
           <SkeletonLoad />
         ) : (

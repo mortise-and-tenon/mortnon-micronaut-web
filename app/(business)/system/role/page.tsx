@@ -37,7 +37,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useRef, useState } from "react";
 import { GlobalContext } from "@/app/_modules/globalProvider";
 import { UserPermission } from "@/app/_modules/definies";
-import SkeletonModal from "@/app/_modules/SkeletonModal";
+import SkeletonLoad from "@/app/_modules/SkeletonLoad";
 
 //查询表格数据API
 const queryAPI = "/api/roles";
@@ -470,7 +470,7 @@ export default function Role() {
                 onFinish={executeModifyData}
               >
                 {editLoading ? (
-                  <SkeletonModal />
+                  <SkeletonLoad />
                 ) : (
                   <>
                     <ProForm.Group>

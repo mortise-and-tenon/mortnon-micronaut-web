@@ -63,7 +63,7 @@ import {
   faThumbtack,
   faUsers,
   faShield,
-  faWrench
+  faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -158,7 +158,7 @@ export const IconMap: IconType = {
   sync: <SyncOutlined />,
   wifi: <WifiOutlined />,
   security: <FontAwesomeIcon icon={faShield} />,
-  setting: <FontAwesomeIcon icon={faWrench} />
+  setting: <FontAwesomeIcon icon={faWrench} />,
 };
 
 //Cron框本地化内容
@@ -384,3 +384,14 @@ export const UserPermission = {
   //维护菜单数据
   MENU_UPDATE: "MENU_UPDATE",
 };
+
+//域名校验正则
+export const domainRule = /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/;
+
+//IP 校验正则
+export const ipRule =
+  /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+//通用的RSA公钥，用于加密敏感数据传输，与后端 application.yml 中的一对
+export const commonPublicKey =
+  "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCN74zEheRhsnCRzj9FOJJ5/zXez0Pmbu1pu21/lyA5VT3QH7xSXnBCOwhiYDtTn0Bg1OQYD2wBNajdfJ2tGW1gVYTiR6vOe5blwe+dtYK8h0uvnQQtTDZ3TqE8VnEvb1xXy9a2zERujsdPIpZAJCrdGcSB/i4Mg8mc91dlY+MTNQIDAQAB";

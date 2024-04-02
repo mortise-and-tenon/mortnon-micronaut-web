@@ -63,7 +63,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { UserPermission } from "@/app/_modules/definies";
 import { GlobalContext } from "@/app/_modules/globalProvider";
-import SkeletonModal from "@/app/_modules/SkeletonModal";
+import SkeletonLoad from "@/app/_modules/SkeletonLoad";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
@@ -1155,7 +1155,7 @@ export default function User() {
                   onFinish={executeModifyUser}
                 >
                   {editLoading ? (
-                    <SkeletonModal />
+                    <SkeletonLoad />
                   ) : (
                     <>
                       <ProForm.Group>

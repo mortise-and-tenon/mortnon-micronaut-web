@@ -37,7 +37,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { useContext, useRef, useState } from "react";
-import SkeletonModal from "@/app/_modules/SkeletonModal";
+import SkeletonLoad from "@/app/_modules/SkeletonLoad";
 import { GlobalContext } from "@/app/_modules/globalProvider";
 import { UserPermission } from "@/app/_modules/definies";
 
@@ -615,7 +615,7 @@ export default function Project() {
         onFinish={executeModifyData}
       >
         {editLoading ? (
-          <SkeletonModal />
+          <SkeletonLoad />
         ) : (
           <>
             <ProForm.Group>

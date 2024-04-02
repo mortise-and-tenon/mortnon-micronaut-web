@@ -38,7 +38,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { IconMap, UserPermission } from "@/app/_modules/definies";
 import { useContext, useRef, useState } from "react";
-import SkeletonModal from "@/app/_modules/SkeletonModal";
+import SkeletonLoad from "@/app/_modules/SkeletonLoad";
 import { GlobalContext } from "@/app/_modules/globalProvider";
 
 //查询表格数据API
@@ -662,7 +662,7 @@ export default function Menu() {
         onFinish={executeModifyData}
       >
         {editLoading ? (
-          <SkeletonModal />
+          <SkeletonLoad />
         ) : (
           <>
             <ProForm.Group>

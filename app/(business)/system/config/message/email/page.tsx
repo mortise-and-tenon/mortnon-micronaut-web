@@ -55,9 +55,6 @@ export default function Config() {
         return;
       }
 
-      setEnabledSwitch(body.data.enabled);
-      setEnabledAuth(body.data.auth);
-
       if (body.data.enabled) {
         modifyFormRef?.current?.setFieldsValue({
           enabled: body.data.enabled,
@@ -71,6 +68,10 @@ export default function Config() {
           user_name: body.data.user_name,
         });
       }
+
+      setEnabledSwitch(body.data.enabled);
+      setEnabledAuth(body.data.auth);
+
       setLoading(false);
     }
   };
@@ -96,11 +97,16 @@ export default function Config() {
       if (body.success) {
         message.success("保存配置成功");
       } else {
-        message.error(body.message);
+        if (body.error_code === "B0004") {
+          message.error("登录认证双因子已使用电子邮件，无法停用！");
+        } else {
+          message.error(body.message);
+        }
       }
     }
     setSaveLoading(false);
   };
+
 
   const [enabledSwitch, setEnabledSwitch] = useState(false);
 
@@ -126,7 +132,7 @@ export default function Config() {
   const sendCode = async () => {
     let values = modifyFormRef.current.getFieldsValue();
     values["password"] = encryptWithKey(values["password"], commonPublicKey);
-    
+
     const code = generateRandomString(4);
     values["code"] = code;
     setVerifyCode(code);
@@ -143,7 +149,11 @@ export default function Config() {
       if (result.success) {
         message.success(`验证码已发送`);
       } else {
-        message.error("验证码发送异常，请检查配置是否正确");
+        if (result.error_code === "A0113") {
+          message.error("验证码发送异常，请检查当前管理员邮箱配置");
+        } else {
+          message.error("验证码发送异常，请检查配置是否正确");
+        }
       }
     } else {
       message.error("验证码发送异常，请检查配置是否正确");
@@ -171,7 +181,7 @@ export default function Config() {
                   <Button
                     type="primary"
                     key="submit"
-                    disabled={!verifyPass}
+                    disabled={!verifyPass && enabledSwitch}
                     loading={saveLoading}
                     onClick={() => props.form?.submit?.()}
                   >
@@ -332,7 +342,7 @@ export default function Config() {
                       ),
                     }}
                     label="验证码"
-                    tooltip="输入邮箱收到的验证码，用于确认配置正确"
+                    tooltip="输入当前用户邮箱收到的验证码，如果未收到，请检查邮箱配置及当前用户的邮箱是否正确"
                     placeholder="请输入验证码"
                     onGetCaptcha={async (phone: any) => {
                       await sendCode();

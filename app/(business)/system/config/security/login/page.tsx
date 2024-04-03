@@ -21,6 +21,8 @@ import SkeletonLoad from "@/app/_modules/SkeletonLoad";
 const queryAPI = "/api/system/config";
 //更新配置API
 const updateAPI = "/api/system/config";
+//查询邮箱配置API
+const messageEmailConfigAPI = "/api/system/message/email";
 
 export default function Config() {
   const { push } = useRouter();
@@ -53,6 +55,7 @@ export default function Config() {
 
   useEffect(() => {
     queryConfig();
+    queryMessageConfig();
   }, []);
 
   //保存配置
@@ -72,6 +75,34 @@ export default function Config() {
       }
     }
   };
+
+  //是否配置了邮箱
+  const [emailEnabled, setEmailEnabled] = useState(false);
+
+  //查询邮件配置
+  const queryMessageConfig = async () => {
+    const body = await fetchApi(messageEmailConfigAPI, push);
+    if (body !== undefined) {
+      if (body.success) {
+        setEmailEnabled(body.data.enabled);
+      }
+    }
+  };
+
+  //双因子认证选择
+  const doubleFactorOptions = [
+    {
+      label: "关闭",
+      value: "DISABLE",
+    },
+  ];
+
+  if (emailEnabled) {
+    doubleFactorOptions.push({
+      label: "电子邮件",
+      value: "EMAIL",
+    });
+  }
 
   return (
     <PageContainer title={false}>
@@ -145,6 +176,15 @@ export default function Config() {
                 tooltip="达到允许失败次数时开始锁定"
                 name="lock_time"
                 fieldProps={{ precision: 0, addonAfter: "秒" }}
+              />
+            </ProForm.Group>
+            <ProForm.Group>
+              <ProFormRadio.Group
+                name="double_factor"
+                width="md"
+                label="双因子认证"
+                tooltip="开启相应的信息模式后即可选择"
+                options={doubleFactorOptions}
               />
             </ProForm.Group>
           </ProForm>

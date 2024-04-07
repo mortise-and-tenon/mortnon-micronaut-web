@@ -5,6 +5,9 @@ import {
   ProConfigProvider,
   ProFormCheckbox,
   ProFormText,
+  ModalForm,
+  ProForm,
+  ProFormCaptcha,
 } from "@ant-design/pro-components";
 import { Divider, message, Spin, theme, Flex } from "antd";
 import { deleteCookie, getCookie, setCookie } from "cookies-next";
@@ -119,7 +122,8 @@ export default function Login() {
     const loginData: LoginReq = {
       username: values.username,
       password: encryptPwd,
-      verify_code: values.code,
+      code: values.code,
+      verify_code: values.verify_code,
       verify_key: captcha.key,
     };
 
@@ -204,6 +208,7 @@ export default function Login() {
           autoLogin: true,
         });
       }
+      setCanSendCode(true);
     }
   };
 
@@ -246,6 +251,47 @@ export default function Login() {
 
     return () => cancelAnimationFrame(frameRef.current);
   }, [isCounting]);
+
+  //是否展示双因子输入
+  const [showDoubleFactor, setShowDoubleFactor] = useState(true);
+
+  //是否允许发送双因子验证码
+  const [canSendCode, setCanSendCode] = useState(false);
+
+  //双因子验证码倒计时秒数
+  const [codeCountdown, setCodeCountdown] = useState(60);
+
+  //发送双因子验证码
+  const sendCode = async () => {
+    const values = loginFormRef?.current?.getFieldsValue();
+
+    const codeReq = {
+      username: values.username,
+    };
+
+    try {
+      const response = await fetch("/api/login/code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(codeReq),
+        credentials: "include",
+      });
+
+      //获得响应
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          message.sucess("已发送双因子验证码，请查收");
+        } else {
+          message.error("发送双因子验证码异常");
+        }
+      }
+    } catch (error) {
+    } finally {
+    }
+  };
 
   return (
     <ProConfigProvider dark={isDark}>
@@ -306,6 +352,15 @@ export default function Login() {
                     className={"prefixIcon"}
                   />
                 ),
+                onChange: (e: any) => {
+                  if (e.target.value !== "") {
+                    const password =
+                      loginFormRef?.current?.getFieldValue("password");
+                    setCanSendCode(password !== "");
+                  } else {
+                    setCanSendCode(false);
+                  }
+                },
               }}
               placeholder={"用户名"}
               rules={[
@@ -327,6 +382,15 @@ export default function Login() {
                     className={"prefixIcon"}
                   />
                 ),
+                onChange: (e: any) => {
+                  if (e.target.value !== "") {
+                    const username =
+                      loginFormRef?.current?.getFieldValue("username");
+                    setCanSendCode(username !== "");
+                  } else {
+                    setCanSendCode(false);
+                  }
+                },
               }}
               placeholder={"密码"}
               rules={[
@@ -336,26 +400,45 @@ export default function Login() {
                 },
               ]}
             />
+            {showDoubleFactor && (
+              <ProFormCaptcha
+                name="code"
+                placeholder="请输入双因子验证码"
+                onTiming={(count: number) => {
+                  setCodeCountdown(count);
+                }}
+                onGetCaptcha={async (phone: any) => {
+                  if (codeCountdown == 60) {
+                    await sendCode();
+                  }
+                }}
+                captchaProps={{
+                  disabled: !canSendCode,
+                  size: "large",
+                }}
+                fieldProps={{
+                  size: "large",
+                }}
+                rules={[
+                  {
+                    required: true,
+                    message: "双因子验证码不能为空",
+                  },
+                ]}
+              />
+            )}
             {showCaptcha && (
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "center",
+                  justify: "space-between",
                   flexDirection: "row",
                 }}
               >
                 <ProFormText
-                  name="code"
+                  name="verify_code"
                   fieldProps={{
                     size: "large",
-                    prefix: (
-                      <UserOutlined
-                        style={{
-                          color: token.colorText,
-                        }}
-                        className={"prefixIcon"}
-                      />
-                    ),
                   }}
                   placeholder={"验证码"}
                   rules={[
@@ -373,7 +456,7 @@ export default function Login() {
                     ) : (
                       <Image
                         src={captcha.image}
-                        width={80}
+                        width={112}
                         height={40}
                         alt="captcha"
                         onClick={getCaptcha}

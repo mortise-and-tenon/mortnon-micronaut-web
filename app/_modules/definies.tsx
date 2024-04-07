@@ -72,6 +72,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 export type LoginReq = {
   username: string;
   password: string;
+  code: string;
   verify_code: string;
   verify_key: string;
 };

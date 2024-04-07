@@ -210,7 +210,6 @@ export default function Config() {
                     tooltip="服务器IP/域名"
                     placeholder="请填写邮箱服务器"
                     rules={[
-                      { required: true, message: "请邮箱服务器地址" },
                       ({ getFieldValue }) => ({
                         validator(_, value) {
                           if (ipRule.test(value)) {

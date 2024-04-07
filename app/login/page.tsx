@@ -86,6 +86,7 @@ export default function Login() {
       const body = await response.json();
       if (body !== undefined) {
         setLoginConfig(body.data);
+        setShowDoubleFactor(body.data.double_factor !== "DISABLE");
       }
     }
   };
@@ -253,7 +254,7 @@ export default function Login() {
   }, [isCounting]);
 
   //是否展示双因子输入
-  const [showDoubleFactor, setShowDoubleFactor] = useState(true);
+  const [showDoubleFactor, setShowDoubleFactor] = useState(false);
 
   //是否允许发送双因子验证码
   const [canSendCode, setCanSendCode] = useState(false);

@@ -1,54 +1,63 @@
 
-# 若依 React Pro
+# Mortnon Web
 
-> 实现效果截图
+项目地址
 
-- 浅色模式
+- [GitHub](https://github.com/mortise-and-tenon/mortnon-micronaut-web)
+- [Gitee](https://gitee.com/mortise-and-tenon/mortnon-web)
 
-1. 登录
+> 效果预览
 
-![](https://images.bookhub.tech/ruoyi/login_light.png)
+1. 普通登录
 
-2. 首页
+![](https://images.bookhub.tech/mortnon/login.PNG)
 
-![](https://images.bookhub.tech/ruoyi/home_light.png)
+2. 图形验证码
 
-3. 表单
+![](https://images.bookhub.tech/mortnon/login2.PNG)
 
-![](https://images.bookhub.tech/ruoyi/table_light.png)
+3. 双因子验证码
 
-4. 统计
+![](https://images.bookhub.tech/mortnon/login3.PNG)
 
-![](https://images.bookhub.tech/ruoyi/statis_light.png)
+4. 用户管理
 
-- 深色模式
+![](https://images.bookhub.tech/mortnon/user.PNG)
 
-1. 登录
+5. 角色管理
 
-![](https://images.bookhub.tech/ruoyi/login_dark.png)
+![](https://images.bookhub.tech/mortnon/role.PNG)
 
-2. 首页
 
-![](https://images.bookhub.tech/ruoyi/home_dark.png)
+6. 组织管理
 
-3. 表单
+![](https://images.bookhub.tech/mortnon/depart.PNG)
 
-![](https://images.bookhub.tech/ruoyi/table_dark.png)
+7. 菜单管理
 
-4. 统计
+![](https://images.bookhub.tech/mortnon/menu.PNG)
 
-![](https://images.bookhub.tech/ruoyi/statis_dark.png)
+8. 日志管理
+
+![](https://images.bookhub.tech/mortnon/log.PNG)
+
+9. 登录认证安全设置
+
+![](https://images.bookhub.tech/mortnon/security.PNG)
+
+10. 电子邮件设置
+
+![](https://images.bookhub.tech/mortnon/email.PNG)
 
 ## 项目说明
 
 ![Static Badge](https://img.shields.io/badge/React-18.2.0-%236EB6FF) ![Static Badge](https://img.shields.io/badge/NextJS-14.1.0-%2349D49D) ![Static Badge](https://img.shields.io/badge/AntD-5.13.1-%23FFA94D) ![Static Badge](https://img.shields.io/badge/AntD%20ProComponets-2.6.48-%23E94F87)
 
-![Static Badge](https://img.shields.io/badge/%E8%8B%A5%E4%BE%9D-%E6%94%AF%E6%8C%81-green)
 ![Static Badge](https://img.shields.io/badge/ESLint-PASS-green)
 
-本项目为 RuoYi 前后端分离版本的前端适配项目。原作者的 RuoYi 前端项目使用 Vue 开发，本项目使用 React 开发，并引入了 Antd 和 Antd ProComponents，具有更高的美观度。
+本项目
 
-### 使用框架
+### 使用及推荐框架
 
 - [Next.js](https://nextjs.org/)：主体 React 框架
 - [Ant Design](https://ant-design.antgroup.com/index-cn)：页面组件
@@ -81,7 +90,9 @@ npm run dev
 
 - 访问 [http://localhost:3000](http://localhost:3000)
 
-## TODO
+## 适配的后端项目
 
-- 表单构建页面
-- 代码生成页面
+> Mortnon Mirconaut
+
+- [GitHub](https://github.com/mortise-and-tenon/mortnon-micronaut)
+- [Gitee](https://gitee.com/mortise-and-tenon/mortnon-with-micronaut)

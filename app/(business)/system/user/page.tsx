@@ -754,7 +754,7 @@ export default function User() {
 
   //点击删除按钮
   const onClickDeleteRow = (record?: any) => {
-    const userId = record != undefined ? record.id : selectedRowKeys.join(",");
+    const userId = record != undefined ? String(record.id) : selectedRowKeys.join(",");
     Modal.confirm({
       title: "系统提示",
       icon: <ExclamationCircleFilled />,

@@ -26,7 +26,7 @@ export default function Home() {
 
   useEffect(() => {
     const token = getCookie("JWT");
-    if (token === "") {
+    if (token === "" || token == undefined) {
       push("/login");
     } else {
       push("/home");

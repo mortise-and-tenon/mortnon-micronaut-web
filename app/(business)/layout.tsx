@@ -11,7 +11,11 @@ import {
   SearchOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { ProConfigProvider, ProLayout } from "@ant-design/pro-components";
+import {
+  ProConfigProvider,
+  ProLayout,
+  MenuDataItem,
+} from "@ant-design/pro-components";
 import type { SelectProps } from "antd";
 import { Dropdown, MenuProps, Modal, Select, Tooltip } from "antd";
 import { deleteCookie, getCookie } from "cookies-next";
@@ -119,20 +123,22 @@ export default function RootLayout({
   };
 
   //用于设置全局的权限数据
-  const { setGlobalPermission} = useContext(GlobalContext);
+  const { setGlobalPermission } = useContext(GlobalContext);
 
   //缓存的菜单数据
   const [menuData, setMenuData] = useState<any[]>([]);
 
   //当前用户菜单key
-  const userMenu:string[] = [];
+  const userMenu: string[] = [];
 
   //获取菜单
   const getRoutes = async () => {
     const body = await fetchApi("/api/profile", push);
 
+    const rootChildren: Array<MenuDataItem> = new Array<MenuDataItem>();
+
     if (body === undefined) {
-      return;
+      return rootChildren;
     }
 
     getProfile(body.data.user);
@@ -142,7 +148,7 @@ export default function RootLayout({
 
     const userMenu: any[] = [];
 
-    const rootChildren: Array<RouteInfo> = new Array<RouteInfo>();
+    
     //搜索用的菜单列表
     const searchMenuList: any[] = [];
 
@@ -150,7 +156,7 @@ export default function RootLayout({
       body.data.menu
         .sort((a: any, b: any) => a.order - b.order)
         .forEach((menu: any) => {
-          const route: RouteInfo = {
+          const route: MenuDataItem = {
             path: menu.url,
             name: menu.name,
             icon:
@@ -178,11 +184,11 @@ export default function RootLayout({
     }
 
     //如果当前访问的页面不在用户权限内，跳转403页面
-    if(!userMenu.includes(pathname) && pathname !== "/user/profile"){
+    if (!userMenu.includes(pathname) && pathname !== "/user/profile") {
       push("/error/forbidden");
     }
 
-    const bookHub: RouteInfo = {
+    const bookHub: MenuDataItem = {
       path: "https://docs.bookhub.tech",
       name: "BookHub 网站",
       icon: <ChromeFilled />,
@@ -195,18 +201,18 @@ export default function RootLayout({
   };
 
   const getSubMenu = (
-    parent: RouteInfo,
+    parent: MenuDataItem,
     menuChildren: any,
     parentName: any,
     searchMenuList: any[],
     userMenu: any[]
   ) => {
-    const routeChildren: Array<RouteInfo> = new Array<RouteInfo>();
+    const routeChildren: Array<MenuDataItem> = new Array<MenuDataItem>();
 
     menuChildren
       .sort((a: any, b: any) => a.order - b.order)
       .forEach((menu: any) => {
-        const route: RouteInfo = {
+        const route: MenuDataItem = {
           path: menu.url,
           name: menu.name,
           icon:
@@ -237,7 +243,7 @@ export default function RootLayout({
         }
       });
 
-    parent.routes = routeChildren;
+    parent.children = routeChildren;
   };
 
   //退出登录
@@ -332,22 +338,6 @@ export default function RootLayout({
                 )}
               </Link>
             </div>
-          );
-        }}
-        subMenuItemRender={(item, dom) => {
-          let shouldRenderIcon =
-            item.pro_layout_parentKeys && item.pro_layout_parentKeys.length > 0;
-          return (
-            <>
-              {shouldRenderIcon ? (
-                <span style={{ display: "flex", alignItems: "center" }}>
-                  {item.icon}
-                  <span style={{ marginLeft: "8px" }}>{dom}</span>
-                </span>
-              ) : (
-                dom
-              )}
-            </>
           );
         }}
         location={{

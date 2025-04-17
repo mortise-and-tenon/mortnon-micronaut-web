@@ -284,7 +284,7 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          message.sucess("已发送双因子验证码，请查收");
+          message.success("已发送双因子验证码，请查收");
         } else {
           message.error("发送双因子验证码异常");
         }
@@ -432,7 +432,7 @@ export default function Login() {
               <div
                 style={{
                   display: "flex",
-                  justify: "space-between",
+                  justifyContent: "space-between",
                   flexDirection: "row",
                 }}
               >
